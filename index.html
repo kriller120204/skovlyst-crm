@@ -1016,7 +1016,7 @@ function updateBadges(){const hot=DB.prospects.filter(p=>p.status==='Varm'||p.st
 //  INIT
 // ════════════════════════════════
 load();
-if(!DB.products.length){
+if(!DB.products.find(p=>p.sku==='SK-001')){
   const sk=[
     {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
     {sku:'SK-002',name:'India Pale Ale 0,5%',kolli:15,cost:3.63},
