@@ -764,8 +764,8 @@ async function runAI(){
     const txt=data.content?.map(b=>b.text||'').join('').trim();
     const jsonMatch=txt.match(/\{[\s\S]*\}/);
     const raw=(jsonMatch?jsonMatch[0]:txt).replace(/```json|```/g,'').trim();
-    const cleaned=raw.replace(/,\s*([}\]])/g,'$1').replace(/([{,]\s*)(\w+)\s*:/g,'$1"$2":');
-    let parsed;try{parsed=JSON.parse(cleaned);}catch(e2){ld.classList.remove('show');err.textContent='RAW: '+raw.slice(0,300);err.classList.add('show');return;};
+    const cleaned=raw.replace(/:\s*(-?\d+\.?\d*)\s*\/\s*(-?\d+\.?\d*)/g,(_,a,b)=>':'+r2(parseFloat(a)/parseFloat(b))).replace(/,\s*([}\]])/g,'$1').replace(/([{,]\s*)(\w+)\s*:/g,'$1"$2":');
+    let parsed;try{parsed=JSON.parse(cleaned);}catch(e2){parsed=JSON.parse(raw);};
     ld.classList.remove('show');showAIResult(parsed);
   }catch(e){ld.classList.remove('show');err.textContent='❌ '+e.message;err.classList.add('show');}
 }
