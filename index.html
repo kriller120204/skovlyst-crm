@@ -763,7 +763,9 @@ async function runAI(){
     if(!resp.ok){if(resp.status===401){ld.classList.remove('show');err.textContent='❌ API-nøgle ugyldig — tjek Vercel Environment Variables';err.classList.add('show');return;}throw new Error(data.error?.message||'Status '+resp.status);}
     const txt=data.content?.map(b=>b.text||'').join('').trim();
     const jsonMatch=txt.match(/\{[\s\S]*\}/);
-    const parsed=JSON.parse(jsonMatch?jsonMatch[0]:txt.replace(/```json|```/g,'').trim());
+    const raw=(jsonMatch?jsonMatch[0]:txt).replace(/```json|```/g,'').trim();
+    const cleaned=raw.replace(/,\s*([}\]])/g,'$1').replace(/([{,]\s*)(\w+)\s*:/g,'$1"$2":');
+    let parsed;try{parsed=JSON.parse(cleaned);}catch(e2){parsed=JSON.parse(raw);};
     ld.classList.remove('show');showAIResult(parsed);
   }catch(e){ld.classList.remove('show');err.textContent='❌ '+e.message;err.classList.add('show');}
 }
