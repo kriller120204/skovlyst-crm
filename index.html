@@ -854,7 +854,7 @@ async function runAI(){
   err.classList.remove('show');ld.classList.add('show');
   document.getElementById('ai-txt').textContent='AI analyserer faktura...';
   const pl=DB.products.length?DB.products.map(p=>`"${p.name}"[${p.kolli||1}/kolli]`).join(', '):'(ingen)';
-  const prompt=`Udtræk varelinjer som JSON. Ignorer pant/retur-linjer. Katalog: ${pl}\nRegler: kolliQty fra produktnavn (24x33CL→24), totalStk=ordreAntal×kolliQty, unitPrice=lineTotal/totalStk. Kun JSON:\n{"invoiceNumber":"","invoiceDate":"YYYY-MM-DD","customerName":"","lines":[{"rawName":"","matchedProductName":"","ordreAntal":1,"kolliStr":"","kolliQty":1,"totalStk":1,"unitPrice":0,"lineTotal":0}]}`;
+  const prompt=`Udtræk varelinjer som JSON. Ignorer pant/retur/deposit-linjer. Katalog: ${pl}\nREGLER:\n1. kolliQty: læs fra produktnavn (24x33CL→24, 12x50CL→12, 6x75CL→6). Default 1.\n2. totalStk = ordreAntal × kolliQty\n3. lineTotal = linjebeløb ekskl. moms EFTER rabat\n4. unitPrice = lineTotal / totalStk  ← VIGTIGT: per STYK ikke per kolli\nEksempel: ordreAntal=2, kolliQty=12, lineTotal=257.28 → totalStk=24, unitPrice=257.28/24=10.72\nKun JSON:\n{"invoiceNumber":"","invoiceDate":"YYYY-MM-DD","customerName":"","lines":[{"rawName":"","matchedProductName":"","ordreAntal":1,"kolliStr":"","kolliQty":1,"totalStk":1,"unitPrice":0,"lineTotal":0}]}`;
   try{
     const body={text:(pendText||'').slice(0,4000),prompt};
     const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
