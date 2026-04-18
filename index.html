@@ -1199,11 +1199,23 @@ async function doLogin(){
   errEl.style.display='none';okEl.style.display='none';
   if(!email||!pw){errEl.textContent='Udfyld email og adgangskode';errEl.style.display='block';return;}
   document.getElementById('login-btn').textContent='Vent...';
-  const {error}=loginMode==='in'
-    ?await sb.auth.signInWithPassword({email,password:pw})
-    :await sb.auth.signUp({email,password:pw});
-  if(error){errEl.textContent=error.message;errEl.style.display='block';document.getElementById('login-btn').textContent=loginMode==='in'?'Log ind':'Opret konto';}
-  else if(loginMode==='up'){okEl.textContent='✅ Konto oprettet! Tjek din email for bekræftelse, log derefter ind.';okEl.style.display='block';loginTab('in');}
+  try{
+    if(loginMode==='up'){
+      const {error}=await sb.auth.signUp({email,password:pw});
+      if(error)throw error;
+      okEl.textContent='✅ Konto oprettet! Log ind nedenfor.';okEl.style.display='block';loginTab('in');
+    }else{
+      const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+      if(error)throw error;
+      sbUser=data.user;
+      await load();
+      await initAppData();
+      appReady();
+    }
+  }catch(e){
+    errEl.textContent=e.message;errEl.style.display='block';
+  }
+  document.getElementById('login-btn').textContent=loginMode==='in'?'Log ind':'Opret konto';
 }
 async function doForgot(){
   const email=document.getElementById('login-email').value.trim();
@@ -1227,37 +1239,43 @@ function showLogin(){
 // ════════════════════════════════
 //  INIT
 // ════════════════════════════════
+async function initAppData(){
+  if(!DB.products.find(p=>p.sku==='SK-001')){
+    const sk=[
+      {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-002',name:'India Pale Ale 0,5%',kolli:15,cost:3.63},
+      {sku:'SK-003',name:'Lager 0,5%',kolli:6,cost:3.63},
+      {sku:'SK-004',name:'Nældebryg 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-005',name:'Ellebryg Forår 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-006',name:'Ahornbryg 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-007',name:'Oktoberfest 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-008',name:'Ellebryg Jul 0,5%',kolli:12,cost:3.63},
+      {sku:'SK-009',name:'Solnedgang 2,7%',kolli:24,cost:3.63},
+      {sku:'SK-010',name:'Hindbær Blanche 2,7%',kolli:6,cost:3.63},
+      {sku:'SK-011',name:'Humlebryg IPA 5,5%',kolli:15,cost:4.63},
+      {sku:'SK-012',name:'Nældebryg Stout 5,5%',kolli:15,cost:4.63},
+      {sku:'SK-013',name:'Ahornbryg Bock 5,5%',kolli:15,cost:4.63},
+      {sku:'SK-014',name:'Bøgebryg Brown Ale 5,2%',kolli:15,cost:4.63},
+    ];
+    sk.forEach(p=>DB.products.push({id:uid('p'),brand:'Skovlyst Øl',litre:0.5,list:0,pant:0,...p}));
+    save();
+  }
+  rDash();updateAiStatus();updateBadges();
+}
+
+// handle existing session on page load + logout
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(session){
-    sbUser=session.user;
-    await load();
-    if(!DB.products.find(p=>p.sku==='SK-001')){
-      const sk=[
-        {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-002',name:'India Pale Ale 0,5%',kolli:15,cost:3.63},
-    {sku:'SK-003',name:'Lager 0,5%',kolli:6,cost:3.63},
-    {sku:'SK-004',name:'Nældebryg 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-005',name:'Ellebryg Forår 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-006',name:'Ahornbryg 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-007',name:'Oktoberfest 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-008',name:'Ellebryg Jul 0,5%',kolli:12,cost:3.63},
-    {sku:'SK-009',name:'Solnedgang 2,7%',kolli:24,cost:3.63},
-    {sku:'SK-010',name:'Hindbær Blanche 2,7%',kolli:6,cost:3.63},
-    {sku:'SK-011',name:'Humlebryg IPA 5,5%',kolli:15,cost:4.63},
-    {sku:'SK-012',name:'Nældebryg Stout 5,5%',kolli:15,cost:4.63},
-    {sku:'SK-013',name:'Ahornbryg Bock 5,5%',kolli:15,cost:4.63},
-    {sku:'SK-014',name:'Bøgebryg Brown Ale 5,2%',kolli:15,cost:4.63},
-  ];
-      sk.forEach(p=>DB.products.push({id:uid('p'),brand:'Skovlyst Øl',litre:0.5,list:0,pant:0,...p}));
-      save();
+  if(event==='SIGNED_OUT'){sbUser=null;showLogin();}
+  // SIGNED_IN is handled directly in doLogin(); INITIAL_SESSION handles page refresh
+  if(event==='INITIAL_SESSION'){
+    if(session){
+      sbUser=session.user;
+      await load();
+      await initAppData();
+      appReady();
+    }else{
+      showLogin();
     }
-    appReady();
-    rDash();
-    updateAiStatus();
-    updateBadges();
-  }else{
-    sbUser=null;
-    showLogin();
   }
 });
 </script>
