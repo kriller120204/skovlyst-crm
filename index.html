@@ -308,7 +308,7 @@ select.fi option { background: var(--white); }
   </div>
   <div class="g-32 gap">
     <div class="card"><div class="ct">Seneste ordrer</div>
-      <div class="tw"><table><thead><tr><th>Dato</th><th>Kunde</th><th>Produkt</th><th>Stk</th><th>Salgspris</th><th>Fragt</th><th>BA% m/fragt</th><th>Fakt.</th></tr></thead>
+      <div class="tw"><table><thead><tr><th>Dato</th><th>Kunde</th><th>Fakturanr.</th><th>Total stk</th><th>Total</th><th>Fragt</th><th>BA% m/fragt</th><th>Fakt.</th></tr></thead>
       <tbody id="d-sales"></tbody></table></div>
     </div>
     <div>
@@ -849,8 +849,8 @@ function rDash(){
 
   document.getElementById('d-ba-bars').innerHTML=BRANDS.map(b=>{const ids=DB.products.filter(p=>p.brand===b).map(p=>p.id);const bS=S.filter(s=>ids.includes(s.productId));if(!bS.length)return'';const r=bS.reduce((a,s)=>a+s.price,0),c=bS.reduce((a,s)=>a+s.cost,0),f=bS.reduce((a,s)=>a+saleFreight(s),0);const bn=baNF(r,c),bw=baWF(r,c,f);return`<div class="bar"><div class="bat"><span style="color:${B_CLR[b]};font-weight:500">${b}</span><span style="color:var(--tx2)">${bn}% → <b style="color:${bw>25?'var(--green)':'var(--yellow)'}">${bw}%</b> m/fragt</span></div><div class="pbar"><div class="pfill" style="width:${Math.min(bw,100)}%;background:${B_CLR[b]}"></div></div></div>`;}).join('');
 
-  const rec=[...S].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-  document.getElementById('d-sales').innerHTML=rec.length?rec.map(s=>{const c=DB.customers.find(x=>x.id===s.customerId),p=DB.products.find(x=>x.id===s.productId);const fr=saleFreight(s),ba=saleBaW(s);return`<tr><td>${fDate(s.date)}</td><td><b>${c?.name||'–'}</b></td><td><span class="pill ${B_CLS[p?.brand]||''}">${p?.name||'–'}</span></td><td>${s.qty}</td><td>${fDKK(s.price)}</td><td style="color:var(--red)">${fDKK(fr)}</td><td style="font-weight:500;color:${ba>25?'var(--green)':ba>15?'var(--yellow)':'var(--red)'}">${ba}%</td><td>${s.pdfB64?`<button class="btn xs" onclick="viewPDF('${s.id}')">PDF</button>`:'–'}</td></tr>`;}).join(''):`<tr><td colspan="8"><div class="empty">Gå til Indstillinger → aktiver AI → upload din første faktura</div></td></tr>`;
+  const iMd={};S.forEach(s=>{const k=s.invoiceNum||s.id;if(!iMd[k])iMd[k]={key:k,num:s.invoiceNum,date:s.date,customerId:s.customerId,lines:[],pdfB64:s.pdfB64,pdfId:s.id};iMd[k].lines.push(s);});const rec=Object.values(iMd).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+  document.getElementById('d-sales').innerHTML=rec.length?rec.map(inv=>{const c=DB.customers.find(x=>x.id===inv.customerId);const tot=inv.lines.reduce((a,s)=>a+s.price,0),totC=inv.lines.reduce((a,s)=>a+s.cost,0),totF=inv.lines.reduce((a,s)=>a+saleFreight(s),0),totStk=inv.lines.reduce((a,s)=>a+s.qty,0);const ba=baWF(tot,totC,totF);return`<tr><td>${fDate(inv.date)}</td><td><b>${c?.name||'–'}</b></td><td style="color:var(--mu);font-size:12.5px">${inv.num||'–'}</td><td>${totStk.toLocaleString('da-DK')}</td><td>${fDKK(tot)}</td><td style="color:var(--red)">${fDKK(totF)}</td><td style="font-weight:500;color:${ba>25?'var(--green)':ba>15?'var(--yellow)':'var(--red)'}">${ba}%</td><td>${inv.pdfB64?`<button class="btn xs" onclick="viewPDF('${inv.pdfId}')">PDF</button>`:'–'}</td></tr>`;}).join(''):`<tr><td colspan="8"><div class="empty">Upload din første faktura for at se ordrer her</div></td></tr>`;
 
   const acts=[];
   DB.pipeline.filter(p=>p.nextFollowup&&p.nextFollowup<=today()&&p.status!=='done').slice(0,3).forEach(p=>{const c=DB.customers.find(x=>x.id===p.customerId);acts.push(`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)"><div><b style="font-size:13.5px">${c?.name||'–'}</b><div style="font-size:12px;color:var(--tx2)">${p.subject||p.type}</div></div><span class="badge b-rd">Ring!</span></div>`);});
