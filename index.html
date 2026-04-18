@@ -504,7 +504,7 @@ select.fi option { background: var(--white); }
     <div class="fr2"><div class="fg"><label>By</label><input class="fi" id="c-ci"></div><div class="fg"><label>Telefon</label><input class="fi" id="c-ph"></div></div>
     <div class="fr2"><div class="fg"><label>Kontaktperson</label><input class="fi" id="c-co"></div><div class="fg"><label>Email</label><input class="fi" id="c-em"></div></div>
     <div class="fr2"><div class="fg"><label>BC Kundekode</label><input class="fi" id="c-cv"></div><div class="fg"><label>Næste opfølgning</label><input type="date" class="fi" id="c-nf"></div></div>
-    <div class="fg"><label>Månedligt salgsmål (kr.)</label><input type="number" class="fi" id="c-mg" placeholder="0"></div>
+    <div class="fr2"><div class="fg"><label>Månedligt salgsmål (kr.)</label><input type="number" class="fi" id="c-mg" placeholder="0"></div><div class="fg"><label>Fragtpris (kr./liter)</label><input type="number" class="fi" id="c-fr" placeholder="2.10" step="0.01"></div></div>
     <div class="fg"><label>Relevante brands</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:5px">
         <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--tx2);cursor:pointer"><input type="checkbox" id="cr-s"> Skovlyst Øl</label>
@@ -686,9 +686,9 @@ function updateAiStatus() {
 // ════════════════════════════════
 //  FREIGHT
 // ════════════════════════════════
-const frPrUnit = p => r4(freightRate*(p.litre||0));
-const frForSale = (p,qty) => r2(frPrUnit(p)*qty);
-const saleFreight = s => {const p=DB.products.find(x=>x.id===s.productId);return p?frForSale(p,s.qty):0;};
+const frPrUnit = (p,rate) => r4((rate??freightRate)*(p.litre||0));
+const frForSale = (p,qty,rate) => r2(frPrUnit(p,rate)*qty);
+const saleFreight = s => {const p=DB.products.find(x=>x.id===s.productId);if(!p)return 0;const c=DB.customers.find(x=>x.id===s.customerId);return frForSale(p,s.qty,c?.freightRate??freightRate);};
 const baNF = (sell,cost) => sell?r2(((sell-cost)/sell)*100):0;
 const baWF = (sell,cost,fr) => sell?r2(((sell-cost-fr)/sell)*100):0;
 const saleBaN = s => baNF(s.price,s.cost);
@@ -845,7 +845,7 @@ function rDash(){
   for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const mk2=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;labels.push(d.toLocaleDateString('da-DK',{month:'short'}));const mss=S.filter(s=>s.date.startsWith(mk2));const r=mss.reduce((a,s)=>a+s.price,0),c=mss.reduce((a,s)=>a+s.cost,0),f=mss.reduce((a,s)=>a+saleFreight(s),0);months.push({r,db:Math.max(0,r-c-f)});}
   const ctx=document.getElementById('ch-monthly');
   if(mChart)mChart.destroy();
-  mChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Omsætning',data:months.map(m=>m.r),backgroundColor:'rgba(37,99,235,.15)',borderColor:'rgba(37,99,235,.5)',borderWidth:1.5,borderRadius:4},{label:'DB m/fragt',data:months.map(m=>m.db),backgroundColor:'rgba(22,163,74,.15)',borderColor:'rgba(22,163,74,.5)',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'DM Sans'}}}},scales:{x:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:'#9ca3af',font:{size:11},callback:v=>`${(v/1000).toFixed(0)}k`},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  mChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Omsætning',data:months.map(m=>m.r),borderColor:'rgba(37,99,235,.8)',backgroundColor:'rgba(37,99,235,.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'rgba(37,99,235,1)',tension:.35,fill:true},{label:'DB m/fragt',data:months.map(m=>m.db),borderColor:'rgba(22,163,74,.8)',backgroundColor:'rgba(22,163,74,.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'rgba(22,163,74,1)',tension:.35,fill:true}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'DM Sans'}}}},scales:{x:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:'#9ca3af',font:{size:11},callback:v=>`${(v/1000).toFixed(0)}k`},grid:{color:'rgba(0,0,0,.04)'}}}}});
 
   document.getElementById('d-ba-bars').innerHTML=BRANDS.map(b=>{const ids=DB.products.filter(p=>p.brand===b).map(p=>p.id);const bS=S.filter(s=>ids.includes(s.productId));if(!bS.length)return'';const r=bS.reduce((a,s)=>a+s.price,0),c=bS.reduce((a,s)=>a+s.cost,0),f=bS.reduce((a,s)=>a+saleFreight(s),0);const bn=baNF(r,c),bw=baWF(r,c,f);return`<div class="bar"><div class="bat"><span style="color:${B_CLR[b]};font-weight:500">${b}</span><span style="color:var(--tx2)">${bn}% → <b style="color:${bw>25?'var(--green)':'var(--yellow)'}">${bw}%</b> m/fragt</span></div><div class="pbar"><div class="pfill" style="width:${Math.min(bw,100)}%;background:${B_CLR[b]}"></div></div></div>`;}).join('');
 
@@ -946,11 +946,11 @@ function quickPitch(cId,brand){const c=DB.customers.find(x=>x.id===cId);if(!c)re
 function closeDet(){document.getElementById('cl').style.display='block';document.getElementById('cd').style.display='none';}
 function openMC(eid){
   document.getElementById('mc-ttl').textContent=eid?'Rediger kunde':'Tilføj kunde';
-  if(eid){const c=DB.customers.find(x=>x.id===eid);if(!c)return;const m={n:'name',ci:'city',ph:'phone',co:'contact',em:'email',cv:'cvr',no:'notes',nf:'nextFollowup',mg:'monthlyGoal'};Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('c-'+k);if(el)el.value=c[v]||'';});document.getElementById('c-t').value=c.type;[['cr-s','Skovlyst Øl'],['cr-b','Black Energy'],['cr-4','4Move'],['cr-m','Minecraft']].forEach(([id,b])=>{const el=document.getElementById(id);if(el)el.checked=(c.relevantBrands||[]).includes(b);});document.getElementById('m-cust').dataset.eid=eid;}
+  if(eid){const c=DB.customers.find(x=>x.id===eid);if(!c)return;const m={n:'name',ci:'city',ph:'phone',co:'contact',em:'email',cv:'cvr',no:'notes',nf:'nextFollowup',mg:'monthlyGoal'};Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('c-'+k);if(el)el.value=c[v]||'';});const frel=document.getElementById('c-fr');if(frel)frel.value=c.freightRate??'';document.getElementById('c-t').value=c.type;[['cr-s','Skovlyst Øl'],['cr-b','Black Energy'],['cr-4','4Move'],['cr-m','Minecraft']].forEach(([id,b])=>{const el=document.getElementById(id);if(el)el.checked=(c.relevantBrands||[]).includes(b);});document.getElementById('m-cust').dataset.eid=eid;}
   else{['c-n','c-ci','c-ph','c-co','c-em','c-cv','c-no','c-nf','c-mg'].forEach(f=>{const el=document.getElementById(f);if(el)el.value='';});document.getElementById('c-t').value='Grossist';['cr-s','cr-b','cr-4','cr-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});delete document.getElementById('m-cust').dataset.eid;}
   openM('m-cust');
 }
-function saveCust(){const name=document.getElementById('c-n').value.trim();if(!name){toast('❌ Udfyld navn');return;}const eid=document.getElementById('m-cust').dataset.eid;const rb=[['cr-s','Skovlyst Øl'],['cr-b','Black Energy'],['cr-4','4Move'],['cr-m','Minecraft']].filter(([id])=>document.getElementById(id)?.checked).map(([,b])=>b);const obj={name,type:document.getElementById('c-t').value,city:document.getElementById('c-ci').value.trim(),phone:document.getElementById('c-ph').value.trim(),contact:document.getElementById('c-co').value.trim(),email:document.getElementById('c-em').value.trim(),cvr:document.getElementById('c-cv').value.trim(),notes:document.getElementById('c-no').value.trim(),nextFollowup:document.getElementById('c-nf').value,monthlyGoal:parseFloat(document.getElementById('c-mg').value)||0,relevantBrands:rb};if(eid){Object.assign(DB.customers.find(x=>x.id===eid),obj);}else{obj.id=uid('c');DB.customers.push(obj);}save();closeM('m-cust');rCusts();toast('✅ Kunde gemt!');}
+function saveCust(){const name=document.getElementById('c-n').value.trim();if(!name){toast('❌ Udfyld navn');return;}const eid=document.getElementById('m-cust').dataset.eid;const rb=[['cr-s','Skovlyst Øl'],['cr-b','Black Energy'],['cr-4','4Move'],['cr-m','Minecraft']].filter(([id])=>document.getElementById(id)?.checked).map(([,b])=>b);const frv=parseFloat(document.getElementById('c-fr').value);const obj={name,type:document.getElementById('c-t').value,city:document.getElementById('c-ci').value.trim(),phone:document.getElementById('c-ph').value.trim(),contact:document.getElementById('c-co').value.trim(),email:document.getElementById('c-em').value.trim(),cvr:document.getElementById('c-cv').value.trim(),notes:document.getElementById('c-no').value.trim(),nextFollowup:document.getElementById('c-nf').value,monthlyGoal:parseFloat(document.getElementById('c-mg').value)||0,freightRate:isNaN(frv)?null:frv,relevantBrands:rb};if(eid){Object.assign(DB.customers.find(x=>x.id===eid),obj);}else{obj.id=uid('c');DB.customers.push(obj);}save();closeM('m-cust');rCusts();toast('✅ Kunde gemt!');}
 
 // ════════════════════════════════
 //  SALG
