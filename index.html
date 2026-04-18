@@ -835,7 +835,7 @@ function rDash(){
     const ids=DB.products.filter(p=>p.brand===b).map(p=>p.id);const bS=S.filter(s=>ids.includes(s.productId));
     if(!bS.length)return`<div class="kpi"><div class="kpi-l" style="color:${B_CLR[b]}">${b}</div><div class="kpi-v" style="color:var(--mu)">Ingen salg</div></div>`;
     const r=bS.reduce((a,s)=>a+s.price,0),c=bS.reduce((a,s)=>a+s.cost,0),f=bS.reduce((a,s)=>a+saleFreight(s),0);
-    return`<div class="kpi"><div class="kpi-l" style="color:${B_CLR[b]};font-weight:600">${b}</div><div class="kpi-v">${fDKK(r)}</div><div class="kpi-s">DB: ${fDKK(r-c-f)}</div></div>`;
+    return`<div class="kpi"><div class="kpi-l" style="color:${B_CLR[b]};font-weight:600">${b}</div><div class="kpi-v">${fDKK(r)}</div><div class="kpi-s">DB: ${fDKK(r-c-f)} · ${baWF(r,c,f)}%</div></div>`;
   }).join('');
 
   const months=[],labels=[];
@@ -925,8 +925,8 @@ function openCust(id){
     ${c.monthlyGoal?`<div class="card gap"><div class="goal-top"><span style="font-size:13px">Salgsmål denne måned</span><span style="font-size:13px;font-weight:500;color:${mTot>=c.monthlyGoal?'var(--green)':'var(--yellow)'}">${(mTot/c.monthlyGoal*100).toFixed(0)}% — ${fDKK(mTot)} / ${fDKK(c.monthlyGoal)}</span></div><div class="goal-bar" style="height:8px"><div class="goal-fill" style="width:${Math.min(mTot/c.monthlyGoal*100,100)}%;background:${mTot>=c.monthlyGoal?'var(--green)':'var(--yellow)'}"></div></div></div>`:''}
     <div class="g2 gap">
       <div class="card"><div class="ct">Salgshistorik</div>
-        <div class="tw"><table><thead><tr><th>Dato</th><th>Produkt</th><th>Stk</th><th>Kolli</th><th>Stk.pris</th><th>Total</th><th>Fragt</th><th>Fakt.</th></tr></thead>
-        <tbody>${cS.map(s=>{const p=DB.products.find(x=>x.id===s.productId);const fr=saleFreight(s);const ki=s.kolliQty>1?`${s.ordreAntal}×${s.kolliQty}`:'–';return`<tr><td>${fDate(s.date)}</td><td><span class="pill ${B_CLS[p?.brand]||''}">${p?.name||'–'}</span></td><td>${s.qty}</td><td style="color:var(--blue);font-size:12px">${ki}</td><td>${fDKK(s.unitPrice||0)}</td><td><b>${fDKK(s.price)}</b></td><td style="color:var(--red)">${fDKK(fr)}</td><td>${s.pdfB64?`<button class="btn xs" onclick="viewPDF('${s.id}')">PDF</button>`:s.invoiceNum?`<span style="font-size:11.5px;color:var(--mu)">${s.invoiceNum}</span>`:'–'}</td></tr>`;}).join('')||'<tr><td colspan="8"><div class="empty">Ingen salg endnu</div></td></tr>'}</tbody></table></div>
+        <div class="tw"><table><thead><tr><th>Dato</th><th>Produkt</th><th>Stk</th><th>Kolli</th><th>Stk.pris</th><th>Total</th><th>Fragt</th><th>BA%</th><th>Fakt.</th></tr></thead>
+        <tbody>${cS.map(s=>{const p=DB.products.find(x=>x.id===s.productId);const fr=saleFreight(s);const ki=s.kolliQty>1?`${s.ordreAntal}×${s.kolliQty}`:'–';const ba=baWF(s.price,s.cost,fr);return`<tr><td>${fDate(s.date)}</td><td><span class="pill ${B_CLS[p?.brand]||''}">${p?.name||'–'}</span></td><td>${s.qty}</td><td style="color:var(--blue);font-size:12px">${ki}</td><td>${fDKK(s.unitPrice||0)}</td><td><b>${fDKK(s.price)}</b></td><td style="color:var(--red)">${fDKK(fr)}</td><td style="color:${ba>=40?'var(--green)':ba>=20?'var(--yellow)':'var(--red)'};font-weight:500">${ba}%</td><td>${s.pdfB64?`<button class="btn xs" onclick="viewPDF('${s.id}')">PDF</button>`:s.invoiceNum?`<span style="font-size:11.5px;color:var(--mu)">${s.invoiceNum}</span>`:'–'}</td></tr>`;}).join('')||'<tr><td colspan="9"><div class="empty">Ingen salg endnu</div></td></tr>'}</tbody></table></div>
       </div>
       <div>
         <div class="card gap"><div class="ct">Aktivitetslog</div>
