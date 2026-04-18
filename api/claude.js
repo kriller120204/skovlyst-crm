@@ -24,9 +24,13 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt + '\n\nFakturatekst:\n' + text }],
+        messages: [
+          { role: 'system', content: 'Du er en JSON-ekstraktor. Svar KUN med valid JSON. Ingen forklaringer, ingen markdown, ingen kommentarer.' },
+          { role: 'user', content: prompt + '\n\nFakturatekst:\n' + text }
+        ],
         max_tokens: 2500,
-        temperature: 0
+        temperature: 0,
+        response_format: { type: 'json_object' }
       })
     });
 
