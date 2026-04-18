@@ -246,6 +246,46 @@ select.fi option { background: var(--white); }
 .goal-wrap { margin-bottom: 12px; }
 .goal-top { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px; }
 
+/* ── DASHBOARD DARK ── */
+.main-dark{background:radial-gradient(circle at 20% 20%,rgba(0,80,180,.06) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(80,0,200,.06) 0%,transparent 50%),radial-gradient(rgba(0,210,255,.018) 1px,transparent 1px),#080d1a;background-size:100% 100%,100% 100%,32px 32px,auto;}
+#page-dash .ph{border-bottom-color:rgba(0,210,255,.1);}
+#page-dash .ph h1{color:#f0f6ff;font-weight:700;letter-spacing:-.02em;}
+#page-dash .ph p{color:#3d4f68;}
+#page-dash .kpi{background:rgba(8,18,38,.9);border:1px solid rgba(0,210,255,.12);backdrop-filter:blur(12px);box-shadow:0 0 30px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);transition:border-color .2s,box-shadow .2s;}
+#page-dash .kpi:hover{border-color:rgba(0,210,255,.28);box-shadow:0 0 30px rgba(0,0,0,.6),0 0 24px rgba(0,210,255,.07),inset 0 1px 0 rgba(255,255,255,.04);}
+#page-dash .kpi-l{color:rgba(160,190,230,.45);font-weight:600;letter-spacing:.07em;text-transform:uppercase;font-size:10.5px;}
+#page-dash .kpi-v{color:#eef4ff;}
+#page-dash .kpi-s{color:rgba(150,180,220,.3);}
+#page-dash .kpi.c-bl .kpi-v{color:#38bdf8;text-shadow:0 0 22px rgba(56,189,248,.5);}
+#page-dash .kpi.c-gn .kpi-v{color:#34d399;text-shadow:0 0 22px rgba(52,211,153,.45);}
+#page-dash .kpi.c-rd .kpi-v{color:#f87171;}
+#page-dash .kpi.c-yw .kpi-v{color:#fbbf24;}
+#page-dash .kpi.c-gd .kpi-v{color:#fb923c;text-shadow:0 0 22px rgba(251,146,60,.35);}
+#page-dash .card{background:rgba(8,18,38,.88);border:1px solid rgba(0,210,255,.08);backdrop-filter:blur(12px);box-shadow:0 0 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03);}
+#page-dash .ct{color:#00d4ff;letter-spacing:.15em;font-size:10px;font-weight:700;}
+#page-dash th{background:rgba(0,15,40,.8);color:rgba(0,210,255,.45);border-bottom-color:rgba(0,210,255,.08);font-size:10.5px;letter-spacing:.07em;}
+#page-dash td{color:rgba(190,215,255,.55);border-bottom-color:rgba(0,210,255,.05);}
+#page-dash td b,#page-dash td strong{color:rgba(220,235,255,.8);}
+#page-dash tbody tr:hover td{background:rgba(0,210,255,.03);}
+#page-dash .ph-r .btn{background:rgba(8,18,38,.9);border-color:rgba(0,210,255,.15);color:rgba(160,200,255,.65);box-shadow:none;}
+#page-dash .ph-r .btn:hover{border-color:rgba(0,210,255,.3);color:#38bdf8;}
+#page-dash .ph-r .btn.primary{background:rgba(0,210,255,.07);border-color:rgba(0,210,255,.35);color:#00d4ff;box-shadow:0 0 20px rgba(0,210,255,.12);}
+#page-dash .ph-r .btn.primary:hover{background:rgba(0,210,255,.14);box-shadow:0 0 30px rgba(0,210,255,.22);}
+#page-dash .goal-bar{background:rgba(255,255,255,.04);}
+#page-dash .goal-top span{color:rgba(160,190,230,.45);}
+#page-dash .pbar{background:rgba(255,255,255,.04);}
+#page-dash .bat{color:rgba(140,170,210,.45);}
+#page-dash .bat span:last-child{color:rgba(200,225,255,.65);}
+#page-dash .empty{color:rgba(80,110,160,.35);}
+#page-dash .badge.b-rd{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);}
+#page-dash .badge.b-yw{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+
+/* ── CUST SEARCH DROPDOWN ── */
+.cust-dd{position:absolute;top:100%;left:0;right:0;z-index:300;background:var(--white);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--rs) var(--rs);box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:220px;overflow-y:auto;display:none;}
+.cust-dd-item{padding:9px 12px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--bd);transition:background .1s;}
+.cust-dd-item:last-child{border-bottom:none;}
+.cust-dd-item:hover{background:var(--blue-l);color:var(--blue);}
+
 /* ── TOAST ── */
 #toast { position: fixed; bottom: 20px; right: 20px; background: var(--tx); color: white; padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all .2s; z-index: 9999; pointer-events: none; box-shadow: var(--sh2); }
 #toast.show { opacity: 1; transform: none; }
@@ -464,7 +504,17 @@ select.fi option { background: var(--white); }
   <div class="modal mw">
     <div class="mhd"><h2>Upload faktura fra BC</h2><button class="xb" onclick="closeM('m-inv')">✕</button></div>
     <div id="inv-s1">
-      <div class="fg"><label>Kunde</label><select class="fi" id="inv-cust" style="width:100%"></select></div>
+      <div class="fg"><label>Kunde</label>
+        <div style="position:relative">
+          <input class="fi" id="inv-cust-srch" placeholder="🔍 Søg kunde..." oninput="filterInvCusts()" autocomplete="off" style="width:100%">
+          <select id="inv-cust" style="display:none"></select>
+          <div class="cust-dd" id="inv-cust-dd"></div>
+        </div>
+        <div id="inv-cust-sel" style="display:none;margin-top:5px;padding:5px 10px;background:var(--blue-l);border:1px solid var(--blue-b);border-radius:var(--rs);font-size:13px;color:var(--blue);align-items:center;justify-content:space-between">
+          <span id="inv-cust-sel-name"></span>
+          <button onclick="clearInvCust()" style="background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px;line-height:1">✕</button>
+        </div>
+      </div>
       <div class="uz" id="inv-uz" onclick="document.getElementById('inv-fi').click()"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
@@ -697,13 +747,29 @@ const saleBaW = s => baWF(s.price,s.cost,saleFreight(s));
 // ════════════════════════════════
 //  STORAGE
 // ════════════════════════════════
-function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){}}
+function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){console.error('Save fejl:',e);setTimeout(()=>toast('⚠️ Gem fejlede — data gemmes ikke. Ryd browser-lager og prøv igen.'),0);}}
 function load(){
-  try{const r=localStorage.getItem(DB_KEY);if(r){DB=JSON.parse(r);['pipeline','prospects','campaigns'].forEach(k=>{if(!DB[k])DB[k]=[];});}else initDB();}
-  catch(e){initDB();}
+  try{
+    const r=localStorage.getItem(DB_KEY);
+    if(r){
+      DB=JSON.parse(r);
+      ['pipeline','prospects','campaigns'].forEach(k=>{if(!DB[k])DB[k]=[];});
+      if(!DB.pdfs)DB.pdfs={};
+      // migrate: move pdfB64 from individual sale lines into DB.pdfs (each PDF was duplicated per line)
+      const migMap={};let migrated=false;
+      DB.sales.forEach(s=>{
+        if(s.pdfB64){
+          const k=s.invoiceNum||s.id;
+          if(!migMap[k]){const pid=uid('pdf');DB.pdfs[pid]=s.pdfB64;migMap[k]=pid;}
+          s.pdfKey=migMap[k];delete s.pdfB64;migrated=true;
+        }
+      });
+      if(migrated)save();
+    }else initDB();
+  }catch(e){initDB();}
 }
 function initDB(){
-  DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[]};
+  DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[],pdfs:{}};
   DB.customers=[
     {id:uid('c'),name:'Køge Nord FC',type:'Sportsklub',city:'Køge',phone:'',contact:'',email:'',cvr:'',notes:'',nextFollowup:'',monthlyGoal:0,relevantBrands:['4Move','Skovlyst Øl']},
     {id:uid('c'),name:'Cafe Amokka',type:'Restaurant/Café',city:'',phone:'',contact:'Ufuk',email:'',cvr:'',notes:'',nextFollowup:'',monthlyGoal:0,relevantBrands:['Skovlyst Øl']},
@@ -722,11 +788,13 @@ function nav(p,btn){
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.getElementById('page-'+p).classList.add('active');
   btn.classList.add('on');
+  const m=document.querySelector('.main');p==='dash'?m.classList.add('main-dark'):m.classList.remove('main-dark');
   ({dash:rDash,custs:rCusts,sales:rSales,ws:rWS,fc:rForecast,samp:rSampling,prosp:rProspects,pipe:rPipeline,prods:rProds,settings:()=>updateSettings()})[p]?.();
 }
 function openM(id){document.getElementById(id).classList.add('open');}
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+document.addEventListener('click',e=>{const dd=document.getElementById('inv-cust-dd');if(dd&&!dd.contains(e.target)&&e.target.id!=='inv-cust-srch')dd.style.display='none';});
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
 // ════════════════════════════════
@@ -739,11 +807,42 @@ function saveFR(){freightRate=parseFloat(document.getElementById('fr-input').val
 //  AI INVOICE — uses local encrypted key
 // ════════════════════════════════
 function openInv(cId){
-  // API key handled by Vercel server-side
   resetInv();
   document.getElementById('inv-cust').innerHTML=DB.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  if(cId)document.getElementById('inv-cust').value=cId;
+  document.getElementById('inv-cust-srch').value='';
+  document.getElementById('inv-cust-dd').style.display='none';
+  const sel=document.getElementById('inv-cust-sel');sel.style.display='none';
+  if(cId){
+    document.getElementById('inv-cust').value=cId;
+    const c=DB.customers.find(x=>x.id===cId);
+    if(c){document.getElementById('inv-cust-srch').value=c.name;document.getElementById('inv-cust-sel-name').textContent=c.name;sel.style.display='flex';}
+  }
   openM('m-inv');
+}
+function filterInvCusts(){
+  const q=document.getElementById('inv-cust-srch').value.toLowerCase();
+  const dd=document.getElementById('inv-cust-dd');
+  document.getElementById('inv-cust-sel').style.display='none';
+  if(!q){dd.style.display='none';return;}
+  const matches=DB.customers.filter(c=>c.name.toLowerCase().includes(q)||(c.city||'').toLowerCase().includes(q));
+  dd.style.display='block';
+  dd.innerHTML=matches.length
+    ?matches.map(c=>`<div class="cust-dd-item" onclick="selectInvCust('${c.id}','${c.name.replace(/'/g,"&#39;")}')">${c.name}${c.city?`<span style='font-size:11.5px;color:var(--mu);margin-left:7px'>${c.city}</span>`:''}</div>`).join('')
+    :`<div style="padding:9px 12px;font-size:13px;color:var(--mu)">Ingen kunder fundet</div>`;
+}
+function selectInvCust(id,name){
+  document.getElementById('inv-cust').innerHTML=`<option value="${id}">${name}</option>`;
+  document.getElementById('inv-cust').value=id;
+  document.getElementById('inv-cust-srch').value=name;
+  document.getElementById('inv-cust-dd').style.display='none';
+  const sel=document.getElementById('inv-cust-sel');
+  document.getElementById('inv-cust-sel-name').textContent=name;sel.style.display='flex';
+}
+function clearInvCust(){
+  document.getElementById('inv-cust').value='';
+  document.getElementById('inv-cust-srch').value='';
+  document.getElementById('inv-cust-sel').style.display='none';
+  document.getElementById('inv-cust-srch').focus();
 }
 function resetInv(){pendB64=null;pendName=null;pendLines=[];pendText=null;document.getElementById('inv-s1').style.display='block';document.getElementById('inv-s2').style.display='none';document.getElementById('inv-ulbl').textContent='Klik eller træk faktura PDF hertil';document.getElementById('inv-uz').classList.remove('done','drag');document.getElementById('ai-ld').classList.remove('show');document.getElementById('ai-err').classList.remove('show');document.getElementById('inv-fi').value='';}
 function handleDrop(e){e.preventDefault();document.getElementById('inv-uz').classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')handleFile(f);}
@@ -776,7 +875,7 @@ function matchProd(name){if(!name||!DB.products.length)return DB.products[0]?.id
 function showAIResult(parsed){
   document.getElementById('inv-num').value=parsed.invoiceNumber||'';
   document.getElementById('inv-dt').value=parsed.invoiceDate||today();
-  if(parsed.customerName){const nm=parsed.customerName.toLowerCase();const m=DB.customers.find(c=>nm.includes(c.name.toLowerCase().split(' ')[0])||c.name.toLowerCase().includes(nm.split(' ')[0]));if(m)document.getElementById('inv-cust').value=m.id;}
+  if(parsed.customerName){const nm=parsed.customerName.toLowerCase();const m=DB.customers.find(c=>nm.includes(c.name.toLowerCase().split(' ')[0])||c.name.toLowerCase().includes(nm.split(' ')[0]));if(m)selectInvCust(m.id,m.name);}
   pendLines=(parsed.lines||[]).map((l,i)=>{const kq=l.kolliQty||parseKS(l.kolliStr)||1,oa=l.ordreAntal||1,ts=l.totalStk||(oa*kq);let up=l.unitPrice||0;const lt=l.lineTotal||0;if(!up&&lt&&ts)up=r4(lt/ts);return{i,rawName:l.rawName||'',mpId:matchProd(l.matchedProductName||l.rawName),ordreAntal:oa,kolliQty:kq,totalStk:ts,kolliStr:l.kolliStr||'',unitPrice:up,lineTotal:lt};});
   document.getElementById('ai-sum').textContent=`✅ Fandt ${pendLines.length} ordrelinje${pendLines.length!==1?'r':''} — gennemse og bekræft`;
   renderAIL();
@@ -807,7 +906,8 @@ function confirmImport(){
   if(!cId){toast('❌ Vælg en kunde');return;}
   const valid=pendLines.filter(l=>l.mpId&&l.totalStk>0&&l.unitPrice>0);
   if(!valid.length){toast('❌ Mindst én linje med produkt, antal og pris');return;}
-  valid.forEach(l=>{const p=DB.products.find(x=>x.id===l.mpId);DB.sales.push({id:uid('s'),customerId:cId,productId:l.mpId,qty:l.totalStk,ordreAntal:l.ordreAntal,kolliQty:l.kolliQty,kolliStr:l.kolliStr,unitPrice:l.unitPrice,price:l.lineTotal>0?r2(l.lineTotal):r2(l.unitPrice*l.totalStk),cost:p?r2(p.cost*l.totalStk):0,date:invDt,invoiceNum:invNum,pdfB64:pendB64,pdfName:pendName});});
+  const pdfK=pendB64?uid('pdf'):null;if(pdfK)DB.pdfs[pdfK]=pendB64;
+  valid.forEach(l=>{const p=DB.products.find(x=>x.id===l.mpId);DB.sales.push({id:uid('s'),customerId:cId,productId:l.mpId,qty:l.totalStk,ordreAntal:l.ordreAntal,kolliQty:l.kolliQty,kolliStr:l.kolliStr,unitPrice:l.unitPrice,price:l.lineTotal>0?r2(l.lineTotal):r2(l.unitPrice*l.totalStk),cost:p?r2(p.cost*l.totalStk):0,date:invDt,invoiceNum:invNum,pdfKey:pdfK,pdfName:pendName});});
   save();closeM('m-inv');
   const ap=document.querySelector('.nb.on')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]||'dash';
   ({dash:rDash,custs:rCusts,sales:rSales,ws:rWS,fc:rForecast})[ap]?.();
@@ -846,8 +946,8 @@ function rDash(){
 
   const brandRevs=BRANDS.map(b=>{const ids=DB.products.filter(p=>p.brand===b).map(p=>p.id);const bS=S.filter(s=>ids.includes(s.productId));if(!bS.length)return null;const r=bS.reduce((a,s)=>a+s.price,0);return{b,r};}).filter(Boolean);const maxR=Math.max(...brandRevs.map(x=>x.r),1);document.getElementById('d-ba-bars').innerHTML=brandRevs.map(({b,r})=>`<div class="bar"><div class="bat"><span style="color:${B_CLR[b]};font-weight:600">${b}</span><span style="font-weight:500;color:var(--tx)">${fDKK(r)}</span></div><div class="pbar"><div class="pfill" style="width:${Math.min(r/maxR*100,100)}%;background:${B_CLR[b]}"></div></div></div>`).join('')||'<div style="color:var(--mu);font-size:13px">Ingen salg endnu</div>';
 
-  const iMd={};S.forEach(s=>{const k=s.invoiceNum||s.id;if(!iMd[k])iMd[k]={key:k,num:s.invoiceNum,date:s.date,customerId:s.customerId,lines:[],pdfB64:s.pdfB64,pdfId:s.id};iMd[k].lines.push(s);});const rec=Object.values(iMd).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-  document.getElementById('d-sales').innerHTML=rec.length?rec.map(inv=>{const c=DB.customers.find(x=>x.id===inv.customerId);const tot=inv.lines.reduce((a,s)=>a+s.price,0),totC=inv.lines.reduce((a,s)=>a+s.cost,0),totF=inv.lines.reduce((a,s)=>a+saleFreight(s),0),totStk=inv.lines.reduce((a,s)=>a+s.qty,0);return`<tr><td>${fDate(inv.date)}</td><td><b>${c?.name||'–'}</b></td><td style="color:var(--mu);font-size:12.5px">${inv.num||'–'}</td><td>${totStk.toLocaleString('da-DK')}</td><td>${fDKK(tot)}</td><td style="color:var(--red)">${fDKK(totF)}</td><td>${inv.pdfB64?`<button class="btn xs" onclick="viewPDF('${inv.pdfId}')">PDF</button>`:'–'}</td></tr>`;}).join(''):`<tr><td colspan="7"><div class="empty">Upload din første faktura for at se ordrer her</div></td></tr>`;
+  const iMd={};S.forEach(s=>{const k=s.invoiceNum||s.id;if(!iMd[k])iMd[k]={key:k,num:s.invoiceNum,date:s.date,customerId:s.customerId,lines:[],hasPdf:!!(s.pdfKey||s.pdfB64),pdfId:s.id};iMd[k].lines.push(s);});const rec=Object.values(iMd).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+  document.getElementById('d-sales').innerHTML=rec.length?rec.map(inv=>{const c=DB.customers.find(x=>x.id===inv.customerId);const tot=inv.lines.reduce((a,s)=>a+s.price,0),totC=inv.lines.reduce((a,s)=>a+s.cost,0),totF=inv.lines.reduce((a,s)=>a+saleFreight(s),0),totStk=inv.lines.reduce((a,s)=>a+s.qty,0);return`<tr><td>${fDate(inv.date)}</td><td><b>${c?.name||'–'}</b></td><td style="color:var(--mu);font-size:12.5px">${inv.num||'–'}</td><td>${totStk.toLocaleString('da-DK')}</td><td>${fDKK(tot)}</td><td style="color:var(--red)">${fDKK(totF)}</td><td>${inv.hasPdf?`<button class="btn xs" onclick="viewPDF('${inv.pdfId}')">PDF</button>`:'–'}</td></tr>`;}).join(''):`<tr><td colspan="7"><div class="empty">Upload din første faktura for at se ordrer her</div></td></tr>`;
 
   const acts=[];
   DB.pipeline.filter(p=>p.nextFollowup&&p.nextFollowup<=today()&&p.status!=='done').slice(0,3).forEach(p=>{const c=DB.customers.find(x=>x.id===p.customerId);acts.push(`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)"><div><b style="font-size:13.5px">${c?.name||'–'}</b><div style="font-size:12px;color:var(--tx2)">${p.subject||p.type}</div></div><span class="badge b-rd">Ring!</span></div>`);});
@@ -899,7 +999,7 @@ function openCust(id){
   const ba=baWF(tot,totC,totF),stk=cS.reduce((a,s)=>a+s.qty,0);
   const mk=curM(),mTot=cS.filter(s=>s.date.startsWith(mk)).reduce((a,s)=>a+s.price,0);
   const bought=custBrands(id),acts=DB.pipeline.filter(p=>p.customerId===id).sort((a,b)=>b.date.localeCompare(a.date));
-  const iM={};cS.forEach(s=>{const k=s.invoiceNum||s.id;if(!iM[k])iM[k]={num:s.invoiceNum,date:s.date,lines:[],pdfB64:s.pdfB64};iM[k].lines.push(s);});
+  const iM={};cS.forEach(s=>{const k=s.invoiceNum||s.id;if(!iM[k])iM[k]={num:s.invoiceNum,date:s.date,lines:[],hasPdf:!!(s.pdfKey||s.pdfB64),firstId:s.id};iM[k].lines.push(s);});
   const wsRow=BRANDS.map(b=>{const rel=!c.relevantBrands||c.relevantBrands.includes(b);if(!rel)return`<span class="ws-na">${b.split(' ')[0]}</span>`;return bought.has(b)?`<span class="ws-y">✓ ${b.split(' ')[0]}</span>`:`<span class="ws-n" onclick="quickPitch('${c.id}','${b}')" title="Opret pitch">✗ ${b.split(' ')[0]}</span>`;}).join(' ');
 
   document.getElementById('cd-c').innerHTML=`
@@ -926,14 +1026,14 @@ function openCust(id){
     <div class="g2 gap">
       <div class="card"><div class="ct">Salgshistorik</div>
         <div class="tw"><table><thead><tr><th>Dato</th><th>Produkt</th><th>Stk</th><th>Kolli</th><th>Stk.pris</th><th>Total</th><th>Fragt</th><th>BA%</th><th>Fakt.</th></tr></thead>
-        <tbody>${cS.map(s=>{const p=DB.products.find(x=>x.id===s.productId);const fr=saleFreight(s);const ki=s.kolliQty>1?`${s.ordreAntal}×${s.kolliQty}`:'–';const ba=baWF(s.price,s.cost,fr);return`<tr><td>${fDate(s.date)}</td><td><span class="pill ${B_CLS[p?.brand]||''}">${p?.name||'–'}</span></td><td>${s.qty}</td><td style="color:var(--blue);font-size:12px">${ki}</td><td>${fDKK(s.unitPrice||0)}</td><td><b>${fDKK(s.price)}</b></td><td style="color:var(--red)">${fDKK(fr)}</td><td style="color:${ba>=40?'var(--green)':ba>=20?'var(--yellow)':'var(--red)'};font-weight:500">${ba}%</td><td>${s.pdfB64?`<button class="btn xs" onclick="viewPDF('${s.id}')">PDF</button>`:s.invoiceNum?`<span style="font-size:11.5px;color:var(--mu)">${s.invoiceNum}</span>`:'–'}</td></tr>`;}).join('')||'<tr><td colspan="9"><div class="empty">Ingen salg endnu</div></td></tr>'}</tbody></table></div>
+        <tbody>${cS.map(s=>{const p=DB.products.find(x=>x.id===s.productId);const fr=saleFreight(s);const ki=s.kolliQty>1?`${s.ordreAntal}×${s.kolliQty}`:'–';const ba=baWF(s.price,s.cost,fr);return`<tr><td>${fDate(s.date)}</td><td><span class="pill ${B_CLS[p?.brand]||''}">${p?.name||'–'}</span></td><td>${s.qty}</td><td style="color:var(--blue);font-size:12px">${ki}</td><td>${fDKK(s.unitPrice||0)}</td><td><b>${fDKK(s.price)}</b></td><td style="color:var(--red)">${fDKK(fr)}</td><td style="color:${ba>=40?'var(--green)':ba>=20?'var(--yellow)':'var(--red)'};font-weight:500">${ba}%</td><td>${(s.pdfKey||s.pdfB64)?`<button class="btn xs" onclick="viewPDF('${s.id}')">PDF</button>`:s.invoiceNum?`<span style="font-size:11.5px;color:var(--mu)">${s.invoiceNum}</span>`:'–'}</td></tr>`;}).join('')||'<tr><td colspan="9"><div class="empty">Ingen salg endnu</div></td></tr>'}</tbody></table></div>
       </div>
       <div>
         <div class="card gap"><div class="ct">Aktivitetslog</div>
           ${acts.slice(0,8).map(a=>{const ic=a.type.includes('Opkald')?'ac':a.type.includes('Møde')?'am':a.type.includes('Email')?'ae':a.type.includes('Sampling')?'as':'an';const typeColor=a.type.includes('Opkald')?'var(--blue)':a.type.includes('Møde')?'var(--purple)':a.type.includes('Email')?'var(--gold)':a.type.includes('Sampling')?'var(--green)':'var(--mu)';return`<div style="border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px;background:var(--sf)"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div style="flex:1"><div style="display:flex;align-items:center;gap:7px;margin-bottom:4px"><span style="font-size:11px;font-weight:600;color:${typeColor};background:var(--sf2);padding:2px 7px;border-radius:10px">${a.type}</span><span style="font-size:11.5px;color:var(--mu)">${fDate(a.date)}</span>${a.nextFollowup?`<span style="font-size:11px;color:var(--yellow);font-weight:500">→ ${fDate(a.nextFollowup)}</span>`:''}</div>${a.subject?`<div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:3px">${a.subject}</div>`:''} ${a.note?`<div style="font-size:12.5px;color:var(--tx2);line-height:1.5;white-space:pre-wrap">${a.note}</div>`:''}</div><button class="btn danger xs" style="flex-shrink:0" onclick="delPipe('${a.id}');openCust('${id}')">✕</button></div></div>`;}).join('')||'<div style="color:var(--mu);font-size:13px;padding:8px 0">Ingen aktiviteter endnu</div>'}
         </div>
         <div class="card"><div class="ct">Fakturaer fra BC</div>
-          ${Object.values(iM).map(inv=>{const it=inv.lines.reduce((a,s)=>a+s.price,0);return`<div class="invit"><div><b style="font-size:13px">${inv.num?'#'+inv.num:'Faktura'} · ${fDate(inv.date)}</b><div style="font-size:11.5px;color:var(--mu)">${inv.lines.length} linje${inv.lines.length!==1?'r':''} · ${fDKK(it)}</div></div>${inv.pdfB64?`<button class="btn xs" onclick="viewPDF('${inv.lines[0].id}')">Vis PDF</button>`:''}</div>`;}).join('')||'<div style="color:var(--mu);font-size:13px;padding:8px 0">Ingen fakturaer</div>'}
+          ${Object.values(iM).map(inv=>{const it=inv.lines.reduce((a,s)=>a+s.price,0);return`<div class="invit"><div><b style="font-size:13px">${inv.num?'#'+inv.num:'Faktura'} · ${fDate(inv.date)}</b><div style="font-size:11.5px;color:var(--mu)">${inv.lines.length} linje${inv.lines.length!==1?'r':''} · ${fDKK(it)}</div></div>${inv.hasPdf?`<button class="btn xs" onclick="viewPDF('${inv.firstId}')">Vis PDF</button>`:''}</div>`;}).join('')||'<div style="color:var(--mu);font-size:13px;padding:8px 0">Ingen fakturaer</div>'}
           ${c.notes?`<div style="margin-top:10px;padding:9px 12px;background:var(--sf2);border-radius:var(--rs);font-size:13px;color:var(--tx2)">📝 ${c.notes}</div>`:''}
         </div>
       </div>
@@ -952,11 +1052,11 @@ function saveCust(){const name=document.getElementById('c-n').value.trim();if(!n
 // ════════════════════════════════
 //  SALG
 // ════════════════════════════════
-function rSales(){const q=(document.getElementById('ssrch')?.value||'').toLowerCase(),pf=document.getElementById('sf-brand')?.value||'';const list=[...DB.sales].filter(s=>{const c=DB.customers.find(x=>x.id===s.customerId),p=DB.products.find(x=>x.id===s.productId);return(!q||c?.name.toLowerCase().includes(q)||(s.invoiceNum||'').toLowerCase().includes(q))&&(!pf||p?.brand===pf);});const iM={};list.forEach(s=>{const k=s.invoiceNum||s.id;if(!iM[k])iM[k]={key:k,num:s.invoiceNum,date:s.date,customerId:s.customerId,lines:[],pdfB64:s.pdfB64,pdfId:s.id};iM[k].lines.push(s);});const invs=Object.values(iM).sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('stbl').innerHTML=invs.length?invs.map(inv=>{const c=DB.customers.find(x=>x.id===inv.customerId);const tot=inv.lines.reduce((a,s)=>a+s.price,0),totC=inv.lines.reduce((a,s)=>a+s.cost,0),totF=inv.lines.reduce((a,s)=>a+saleFreight(s),0),totStk=inv.lines.reduce((a,s)=>a+s.qty,0);return`<tr><td>${fDate(inv.date)}</td><td><b>${c?.name||'–'}</b></td><td style="color:var(--mu);font-size:12.5px">${inv.num||'–'}</td><td style="color:var(--tx2);font-size:12.5px">${inv.lines.length} linje${inv.lines.length!==1?'r':''}</td><td>${totStk.toLocaleString('da-DK')}</td><td><b style="cursor:pointer;text-decoration:underline dotted" title="Klik for at rette" onclick="editInvTotal('${inv.key}',${tot})">${fDKK(tot)}</b></td><td style="color:var(--red)">${fDKK(totF)}</td><td>${inv.pdfB64?`<button class="btn xs" onclick="viewPDF('${inv.pdfId}')">PDF</button>`:inv.num?`<span style="font-size:11.5px;color:var(--mu)">${inv.num}</span>`:'–'}</td><td><button class="btn danger xs" onclick="delInv('${inv.key}')">Slet</button></td></tr>`;}).join(''):`<tr><td colspan="9"><div class="empty">Ingen salg matcher</div></td></tr>`;}
+function rSales(){const q=(document.getElementById('ssrch')?.value||'').toLowerCase(),pf=document.getElementById('sf-brand')?.value||'';const list=[...DB.sales].filter(s=>{const c=DB.customers.find(x=>x.id===s.customerId),p=DB.products.find(x=>x.id===s.productId);return(!q||c?.name.toLowerCase().includes(q)||(s.invoiceNum||'').toLowerCase().includes(q))&&(!pf||p?.brand===pf);});const iM={};list.forEach(s=>{const k=s.invoiceNum||s.id;if(!iM[k])iM[k]={key:k,num:s.invoiceNum,date:s.date,customerId:s.customerId,lines:[],hasPdf:!!(s.pdfKey||s.pdfB64),pdfId:s.id};iM[k].lines.push(s);});const invs=Object.values(iM).sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('stbl').innerHTML=invs.length?invs.map(inv=>{const c=DB.customers.find(x=>x.id===inv.customerId);const tot=inv.lines.reduce((a,s)=>a+s.price,0),totC=inv.lines.reduce((a,s)=>a+s.cost,0),totF=inv.lines.reduce((a,s)=>a+saleFreight(s),0),totStk=inv.lines.reduce((a,s)=>a+s.qty,0);return`<tr><td>${fDate(inv.date)}</td><td><b>${c?.name||'–'}</b></td><td style="color:var(--mu);font-size:12.5px">${inv.num||'–'}</td><td style="color:var(--tx2);font-size:12.5px">${inv.lines.length} linje${inv.lines.length!==1?'r':''}</td><td>${totStk.toLocaleString('da-DK')}</td><td><b style="cursor:pointer;text-decoration:underline dotted" title="Klik for at rette" onclick="editInvTotal('${inv.key}',${tot})">${fDKK(tot)}</b></td><td style="color:var(--red)">${fDKK(totF)}</td><td>${inv.hasPdf?`<button class="btn xs" onclick="viewPDF('${inv.pdfId}')">PDF</button>`:inv.num?`<span style="font-size:11.5px;color:var(--mu)">${inv.num}</span>`:'–'}</td><td><button class="btn danger xs" onclick="delInv('${inv.key}')">Slet</button></td></tr>`;}).join(''):`<tr><td colspan="9"><div class="empty">Ingen salg matcher</div></td></tr>`;}
 function delSale(id){if(!confirm('Slet dette salg?'))return;DB.sales=DB.sales.filter(s=>s.id!==id);save();rSales();toast('Slettet');}
 function delInv(key){if(!confirm('Slet hele fakturaen?'))return;DB.sales=DB.sales.filter(s=>(s.invoiceNum||s.id)!==key);save();rSales();toast('Faktura slettet');}
 function editInvTotal(key,cur){const v=prompt('Ret total (ekskl. moms):',cur.toFixed(2).replace('.',','));if(!v)return;const n=parseFloat(v.replace(',','.'));if(isNaN(n)||n<=0)return;const lines=DB.sales.filter(s=>(s.invoiceNum||s.id)===key);if(!lines.length)return;const factor=n/lines.reduce((a,s)=>a+s.price,0);lines.forEach(s=>{s.price=r2(s.price*factor);});save();rSales();toast('✅ Total opdateret');}
-function viewPDF(sid){const s=DB.sales.find(x=>x.id===sid);if(!s?.pdfB64)return;document.getElementById('pdf-ttl').textContent=s.pdfName||'Faktura';document.getElementById('pdf-fr').src=s.pdfB64;openM('m-pdf');}
+function viewPDF(sid){const s=DB.sales.find(x=>x.id===sid);const b64=s?.pdfKey?DB.pdfs[s.pdfKey]:s?.pdfB64;if(!b64)return;document.getElementById('pdf-ttl').textContent=s.pdfName||'Faktura';document.getElementById('pdf-fr').src=b64;openM('m-pdf');}
 
 // ════════════════════════════════
 //  WHITE SPACE
@@ -1016,6 +1116,7 @@ function updateBadges(){const hot=DB.prospects.filter(p=>p.status==='Varm'||p.st
 //  INIT
 // ════════════════════════════════
 load();
+document.querySelector('.main').classList.add('main-dark');
 if(!DB.products.find(p=>p.sku==='SK-001')){
   const sk=[
     {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
