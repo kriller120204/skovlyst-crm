@@ -261,6 +261,7 @@ select.fi option { background: var(--white); }
 #page-dash .kpi.c-rd .kpi-v{color:#f87171;}
 #page-dash .kpi.c-yw .kpi-v{color:#fbbf24;}
 #page-dash .kpi.c-gd .kpi-v{color:#fb923c;text-shadow:0 0 22px rgba(251,146,60,.35);}
+#page-dash .kpi.c-pu .kpi-v{color:#c084fc;text-shadow:0 0 22px rgba(192,132,252,.45);}
 #page-dash .card{background:rgba(8,18,38,.88);border:1px solid rgba(0,210,255,.08);backdrop-filter:blur(12px);box-shadow:0 0 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03);}
 #page-dash .ct{color:#00d4ff;letter-spacing:.15em;font-size:10px;font-weight:700;}
 #page-dash th{background:rgba(0,15,40,.8);color:rgba(0,210,255,.45);border-bottom-color:rgba(0,210,255,.08);font-size:10.5px;letter-spacing:.07em;}
@@ -340,10 +341,10 @@ select.fi option { background: var(--white); }
       <button class="btn primary sm" onclick="openInv(null)">📄 Upload faktura</button>
     </div>
   </div>
-  <div class="g5 gap" id="d-kpi1"></div>
+  <div class="g4 gap" id="d-kpi1"></div>
   <div class="g4 gap" id="d-kpi2"></div>
   <div class="g2 gap">
-    <div class="card"><div class="ct">Månedlig omsætning vs. dækningsbidrag</div><canvas id="ch-monthly" height="160"></canvas></div>
+    <div class="card"><div class="ct">Månedlig omsætning vs. dækningsbidrag</div><canvas id="ch-monthly" height="200"></canvas></div>
     <div class="card"><div class="ct">Omsætning pr. brand</div><div id="d-ba-bars"></div></div>
   </div>
   <div class="g-32 gap">
@@ -926,9 +927,11 @@ function rDash(){
   const od=[...DB.pipeline.filter(p=>p.nextFollowup&&p.nextFollowup<=today()&&p.status!=='done'),...DB.customers.filter(c=>c.nextFollowup&&c.nextFollowup<=today())].length;
   const hp=DB.prospects.filter(p=>p.status==='Varm'||p.status==='Tilbud sendt').length;
 
+  const totDB=r2(totR-totC-totF);
   document.getElementById('d-kpi1').innerHTML=`
     <div class="kpi c-gd"><div class="kpi-l">Total omsætning</div><div class="kpi-v">${fDKK(totR)}</div><div class="kpi-s">${S.length} ordrelinjer</div></div>
-    <div class="kpi c-gn"><div class="kpi-l">Gns. bruttoavance</div><div class="kpi-v">${baW}%</div><div class="kpi-s">Efter fragt</div></div>
+    <div class="kpi c-gn"><div class="kpi-l">Gns. bruttoavance %</div><div class="kpi-v">${baW}%</div><div class="kpi-s">Efter fragt</div></div>
+    <div class="kpi c-pu"><div class="kpi-l">Bruttoavance kr</div><div class="kpi-v">${fDKK(totDB)}</div><div class="kpi-s">DB m/fragt</div></div>
     <div class="kpi c-bl"><div class="kpi-l">Månedssalg</div><div class="kpi-v">${fDKK(mR)}</div><div class="kpi-s">Fragt: ${fDKK(mF)}</div></div>`;
 
   document.getElementById('d-kpi2').innerHTML=BRANDS.map(b=>{
@@ -940,9 +943,21 @@ function rDash(){
 
   const months=[],labels=[];
   for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const mk2=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;labels.push(d.toLocaleDateString('da-DK',{month:'short'}));const mss=S.filter(s=>s.date.startsWith(mk2));const r=mss.reduce((a,s)=>a+s.price,0),c=mss.reduce((a,s)=>a+s.cost,0),f=mss.reduce((a,s)=>a+saleFreight(s),0);months.push({r,db:Math.max(0,r-c-f)});}
-  const ctx=document.getElementById('ch-monthly');
+  const cvs=document.getElementById('ch-monthly');
   if(mChart)mChart.destroy();
-  mChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Omsætning',data:months.map(m=>m.r),borderColor:'rgba(37,99,235,.8)',backgroundColor:'rgba(37,99,235,.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'rgba(37,99,235,1)',tension:.35,fill:true},{label:'DB m/fragt',data:months.map(m=>m.db),borderColor:'rgba(22,163,74,.8)',backgroundColor:'rgba(22,163,74,.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'rgba(22,163,74,1)',tension:.35,fill:true}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'DM Sans'}}}},scales:{x:{ticks:{color:'#9ca3af',font:{size:11}},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:'#9ca3af',font:{size:11},callback:v=>fDKK(v)},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  const cx=cvs.getContext('2d');
+  const gCyan=cx.createLinearGradient(0,0,0,360);gCyan.addColorStop(0,'rgba(0,212,255,.28)');gCyan.addColorStop(1,'rgba(0,212,255,0)');
+  const gPurp=cx.createLinearGradient(0,0,0,360);gPurp.addColorStop(0,'rgba(168,85,247,.22)');gPurp.addColorStop(1,'rgba(168,85,247,0)');
+  mChart=new Chart(cvs,{type:'line',data:{labels,datasets:[
+    {label:'Omsætning',data:months.map(m=>m.r),borderColor:'#00d4ff',backgroundColor:gCyan,borderWidth:2.5,pointRadius:5,pointHoverRadius:8,pointBackgroundColor:'#00d4ff',pointBorderColor:'rgba(0,212,255,.3)',pointBorderWidth:3,tension:.4,fill:true},
+    {label:'DB m/fragt',data:months.map(m=>m.db),borderColor:'#a855f7',backgroundColor:gPurp,borderWidth:2.5,pointRadius:5,pointHoverRadius:8,pointBackgroundColor:'#a855f7',pointBorderColor:'rgba(168,85,247,.3)',pointBorderWidth:3,tension:.4,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:true,interaction:{mode:'index',intersect:false},plugins:{
+    legend:{labels:{color:'rgba(0,210,255,.55)',font:{size:11.5,family:'DM Sans',weight:'600'},boxWidth:10,boxHeight:10,borderRadius:3,useBorderRadius:true}},
+    tooltip:{backgroundColor:'rgba(5,12,30,.95)',borderColor:'rgba(0,210,255,.2)',borderWidth:1,titleColor:'#e2f0ff',bodyColor:'rgba(180,210,255,.7)',padding:12,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fDKK(ctx.parsed.y)}`}}
+  },scales:{
+    x:{ticks:{color:'rgba(0,210,255,.35)',font:{size:11.5,family:'DM Sans'}},grid:{color:'rgba(0,210,255,.05)'},border:{color:'rgba(0,210,255,.08)'}},
+    y:{ticks:{color:'rgba(0,210,255,.35)',font:{size:11,family:'DM Sans'},callback:v=>fDKK(v)},grid:{color:'rgba(0,210,255,.05)'},border:{color:'rgba(0,210,255,.08)'}}
+  }}});
 
   const brandRevs=BRANDS.map(b=>{const ids=DB.products.filter(p=>p.brand===b).map(p=>p.id);const bS=S.filter(s=>ids.includes(s.productId));if(!bS.length)return null;const r=bS.reduce((a,s)=>a+s.price,0);return{b,r};}).filter(Boolean);const maxR=Math.max(...brandRevs.map(x=>x.r),1);document.getElementById('d-ba-bars').innerHTML=brandRevs.map(({b,r})=>`<div class="bar"><div class="bat"><span style="color:${B_CLR[b]};font-weight:600">${b}</span><span style="font-weight:500;color:var(--tx)">${fDKK(r)}</span></div><div class="pbar"><div class="pfill" style="width:${Math.min(r/maxR*100,100)}%;background:${B_CLR[b]}"></div></div></div>`).join('')||'<div style="color:var(--mu);font-size:13px">Ingen salg endnu</div>';
 
