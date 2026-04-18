@@ -6,6 +6,7 @@
 <title>Skovlyst CRM</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
   --bg: #f5f6f8;
@@ -594,7 +595,8 @@ const API_KEY_STORE = 'slyst_api_enc';
 let DB = {customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[]};
 let freightRate = parseFloat(localStorage.getItem(FR_KEY)||'2.10');
 let cTypeF='all', prospF='all';
-let pendB64=null, pendName=null, pendLines=[];
+let pendB64=null, pendName=null, pendLines=[], pendText=null;
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 let activeApiKey='vercel'; // Key handled server-side by Vercel
 let mChart=null;
 
@@ -743,9 +745,9 @@ function openInv(cId){
   if(cId)document.getElementById('inv-cust').value=cId;
   openM('m-inv');
 }
-function resetInv(){pendB64=null;pendName=null;pendLines=[];document.getElementById('inv-s1').style.display='block';document.getElementById('inv-s2').style.display='none';document.getElementById('inv-ulbl').textContent='Klik eller træk faktura PDF hertil';document.getElementById('inv-uz').classList.remove('done','drag');document.getElementById('ai-ld').classList.remove('show');document.getElementById('ai-err').classList.remove('show');document.getElementById('inv-fi').value='';}
+function resetInv(){pendB64=null;pendName=null;pendLines=[];pendText=null;document.getElementById('inv-s1').style.display='block';document.getElementById('inv-s2').style.display='none';document.getElementById('inv-ulbl').textContent='Klik eller træk faktura PDF hertil';document.getElementById('inv-uz').classList.remove('done','drag');document.getElementById('ai-ld').classList.remove('show');document.getElementById('ai-err').classList.remove('show');document.getElementById('inv-fi').value='';}
 function handleDrop(e){e.preventDefault();document.getElementById('inv-uz').classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')handleFile(f);}
-function handleFile(file){if(!file)return;const r=new FileReader();r.onload=async e=>{pendB64=e.target.result;pendName=file.name;document.getElementById('inv-ulbl').textContent='✅ '+file.name;document.getElementById('inv-uz').classList.add('done');await runAI();};r.readAsDataURL(file);}
+function handleFile(file){if(!file)return;const r=new FileReader();r.onload=async e=>{pendB64=e.target.result;pendName=file.name;document.getElementById('inv-ulbl').textContent='✅ '+file.name;document.getElementById('inv-uz').classList.add('done');try{const bytes=new Uint8Array(atob(pendB64.split(',')[1]).split('').map(c=>c.charCodeAt(0)));const pdf=await pdfjsLib.getDocument({data:bytes}).promise;let txt='';for(let i=1;i<=Math.min(pdf.numPages,15);i++){const pg=await pdf.getPage(i);const ct=await pg.getTextContent();txt+=ct.items.map(s=>s.str).join(' ')+'\n';}pendText=txt;}catch(ex){pendText='';}await runAI();};r.readAsDataURL(file);}
 
 async function runAI(){
   const ld=document.getElementById('ai-ld'),err=document.getElementById('ai-err');
@@ -754,7 +756,7 @@ async function runAI(){
   const pl=DB.products.length?DB.products.map(p=>`"${p.name}" (brand:${p.brand},SKU:${p.sku||'–'},${p.litre||'?'}L,${p.kolli||'?'}/kolli,indkøb:${p.cost}kr/stk, PANT IKKE inkluderet)`).join('\n'):'(Ingen produkter oprettet)';
   const prompt=`Salgsassistent for Skovlyst Production A/S. Udtræk alle varelinjer fra fakturaen.\nPANT ALDRIG medregnet — ignorer pant-linjer.\nKatalog:\n${pl}\n\nKolli: "4Move (6x0,75L)" → kolliQty=6, totalStk=ordreAntal×kolliQty, unitPrice=pris pr. ENKELT flaske/dåse UDEN pant\n\nKUN JSON:\n{"invoiceNumber":null,"invoiceDate":"YYYY-MM-DD","customerName":null,"lines":[{"rawName":"","matchedProductName":null,"ordreAntal":1,"kolliStr":null,"kolliQty":1,"totalStk":1,"unitPrice":0,"lineTotal":0}]}`;
   try{
-    const body={model:'claude-sonnet-4-20250514',max_tokens:2500,messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:pendB64.split(',')[1]}},{type:'text',text:prompt}]}]};
+    const body={text:pendText||'',prompt};
     const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const rawText=await resp.text();
     let data;try{data=JSON.parse(rawText);}catch(pe){ld.classList.remove('show');err.textContent='❌ API svarede ikke JSON (status '+resp.status+'): '+rawText.slice(0,120);err.classList.add('show');return;}

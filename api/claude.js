@@ -6,43 +6,38 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: { message: 'GEMINI_API_KEY mangler. Vercel → Settings → Environment Variables.' }
+      error: { message: 'GROQ_API_KEY mangler. Vercel → Settings → Environment Variables.' }
     });
   }
 
   try {
-    const msg = req.body.messages?.[0];
-    const parts = [];
+    const { text, prompt } = req.body;
 
-    for (const block of (msg?.content || [])) {
-      if (block.type === 'document' && block.source?.data) {
-        parts.push({ inline_data: { mime_type: 'application/pdf', data: block.source.data } });
-      } else if (block.type === 'text') {
-        parts.push({ text: block.text });
-      }
-    }
-
-    const geminiBody = {
-      contents: [{ parts }],
-      generationConfig: { maxOutputTokens: 2500, temperature: 0 }
-    };
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) }
-    );
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt + '\n\nFakturatekst:\n' + text }],
+        max_tokens: 2500,
+        temperature: 0
+      })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: { message: data.error?.message || 'Gemini fejl' } });
+      return res.status(response.status).json({ error: { message: data.error?.message || 'Groq fejl' } });
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    return res.status(200).json({ content: [{ text }] });
+    const result = data.choices?.[0]?.message?.content || '';
+    return res.status(200).json({ content: [{ text: result }] });
 
   } catch (err) {
     return res.status(500).json({ error: { message: err.message } });
