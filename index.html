@@ -363,6 +363,7 @@ select.fi option { background: var(--white); }
   <div class="sfooter">
     <div class="ai-status"><span class="dot" id="ai-dot"></span><span id="ai-label">AI ikke sat op</span></div>
   </div>
+  <div style="padding:3px 14px 6px;font-size:11px;color:var(--green);min-height:16px" id="save-status"></div>
   <div class="sb-user"><span id="sb-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button onclick="doLogout()">Log ud</button></div>
 </aside>
 
@@ -681,7 +682,7 @@ const API_KEY_STORE = 'slyst_api_enc';
 //  STATE
 // ════════════════════════════════
 let DB = {customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[]};
-let freightRate = parseFloat(localStorage.getItem(FR_KEY)||'2.10');
+let freightRate = 2.10;
 let cTypeF='all', prospF='all';
 let pendB64=null, pendName=null, pendLines=[], pendText=null;
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -794,16 +795,27 @@ let sbUser = null;
 //  STORAGE
 // ════════════════════════════════
 let saveTimer = null;
+function setSaveStatus(s){const el=document.getElementById('save-status');if(el)el.textContent=s;}
 function save(){
+  setSaveStatus('Gemmer...');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
-    if(!sbUser)return;
+    if(!sbUser){setSaveStatus('');return;}
     try{
       const {error}=await sb.from('crm_data').upsert({user_id:sbUser.id,data:DB,updated_at:new Date().toISOString()});
       if(error)throw error;
-    }catch(e){console.error('Save fejl:',e);toast('⚠️ Gem fejlede: '+e.message);}
+      setSaveStatus('✓ Gemt');
+      setTimeout(()=>setSaveStatus(''),2500);
+    }catch(e){console.error('Save fejl:',e);setSaveStatus('⚠️ Gem fejl');toast('⚠️ Gem fejlede: '+e.message);}
   }, 600);
 }
+async function flushSave(){
+  clearTimeout(saveTimer);
+  if(!sbUser)return;
+  try{await sb.from('crm_data').upsert({user_id:sbUser.id,data:DB,updated_at:new Date().toISOString()});}catch(e){}
+}
+window.addEventListener('beforeunload',()=>flushSave());
+
 async function load(){
   if(!sbUser)return;
   try{
@@ -813,11 +825,13 @@ async function load(){
       DB=data.data;
       ['customers','sales','products','pipeline','prospects','campaigns'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=[];});
       if(!DB.pdfs||typeof DB.pdfs!=='object')DB.pdfs={};
+      if(!DB.settings)DB.settings={};
+      freightRate=DB.settings.freightRate??2.10;
     }else{initDB();save();}
   }catch(e){console.error('Load fejl:',e);initDB();}
 }
 function initDB(){
-  DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[],pdfs:{}};
+  DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[],pdfs:{},settings:{freightRate:2.10}};
   DB.customers=[
     {id:uid('c'),name:'Køge Nord FC',type:'Sportsklub',city:'Køge',phone:'',contact:'',email:'',cvr:'',notes:'',nextFollowup:'',monthlyGoal:0,relevantBrands:['4Move','Skovlyst Øl']},
     {id:uid('c'),name:'Cafe Amokka',type:'Restaurant/Café',city:'',phone:'',contact:'Ufuk',email:'',cvr:'',notes:'',nextFollowup:'',monthlyGoal:0,relevantBrands:['Skovlyst Øl']},
@@ -849,7 +863,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 //  FREIGHT SETTINGS
 // ════════════════════════════════
 function toggleFREdit(){const e=document.getElementById('fr-edit');e.style.display=e.style.display==='none'?'block':'none';}
-function saveFR(){freightRate=parseFloat(document.getElementById('fr-input').value)||2.10;localStorage.setItem(FR_KEY,freightRate);document.getElementById('fr-display').textContent=freightRate.toFixed(2).replace('.',',')+' kr';toggleFREdit();rProds();toast('Fragtpris opdateret');}
+function saveFR(){freightRate=parseFloat(document.getElementById('fr-input').value)||2.10;DB.settings=DB.settings||{};DB.settings.freightRate=freightRate;save();document.getElementById('fr-display').textContent=freightRate.toFixed(2).replace('.',',')+' kr';toggleFREdit();rProds();toast('Fragtpris opdateret');}
 
 // ════════════════════════════════
 //  AI INVOICE — uses local encrypted key
