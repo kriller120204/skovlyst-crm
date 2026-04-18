@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #f5f6f8;
@@ -293,10 +294,45 @@ select.fi option { background: var(--white); }
 
 @media(max-width:1100px){.g5{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:800px){.g4,.g3,.g2,.g-32{grid-template-columns:1fr;}.pi{padding:14px;}}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 30% 20%,rgba(0,80,180,.1) 0%,transparent 50%),radial-gradient(circle at 70% 80%,rgba(80,0,200,.1) 0%,transparent 50%),radial-gradient(rgba(0,210,255,.02) 1px,transparent 1px),#080d1a;background-size:100%,100%,32px 32px,auto;align-items:center;justify-content:center;flex-direction:column;gap:0;}
+.login-box{background:rgba(10,20,42,.9);border:1px solid rgba(0,210,255,.18);border-radius:18px;padding:40px 44px;width:380px;max-width:92vw;box-shadow:0 0 60px rgba(0,0,0,.7),0 0 30px rgba(0,210,255,.06);}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo .ico{font-size:36px;display:block;margin-bottom:8px;}
+.login-logo h1{font-family:'DM Serif Display',serif;font-size:24px;color:#f0f6ff;margin-bottom:4px;}
+.login-logo p{font-size:12.5px;color:rgba(140,170,220,.5);}
+.login-tab{display:flex;gap:0;margin-bottom:24px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;}
+.login-tab button{flex:1;padding:7px;border:none;background:none;color:rgba(140,170,220,.5);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:6px;transition:all .15s;}
+.login-tab button.on{background:rgba(0,210,255,.12);color:#00d4ff;border:1px solid rgba(0,210,255,.25);}
+.login-fi{width:100%;background:rgba(0,10,30,.8);border:1.5px solid rgba(0,210,255,.15);color:#e2f0ff;padding:10px 13px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13.5px;margin-bottom:12px;transition:border-color .15s;}
+.login-fi:focus{outline:none;border-color:rgba(0,210,255,.45);box-shadow:0 0 0 3px rgba(0,210,255,.08);}
+.login-fi::placeholder{color:rgba(100,130,180,.4);}
+.login-btn{width:100%;padding:11px;background:rgba(0,210,255,.1);border:1.5px solid rgba(0,210,255,.35);color:#00d4ff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .18s;margin-top:4px;letter-spacing:.03em;}
+.login-btn:hover{background:rgba(0,210,255,.18);box-shadow:0 0 24px rgba(0,210,255,.18);}
+.login-err{font-size:12.5px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:6px;padding:8px 12px;margin-bottom:12px;display:none;}
+.login-ok{font-size:12.5px;color:#34d399;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:6px;padding:8px 12px;margin-bottom:12px;display:none;}
+.sb-user{padding:6px 14px;font-size:11.5px;color:rgba(100,150,220,.6);border-top:1px solid rgba(0,210,255,.06);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sb-user button{background:none;border:none;color:rgba(0,210,255,.4);font-size:11.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .12s;}
+.sb-user button:hover{color:#f87171;}
 </style>
 </head>
 <body>
-<div class="app">
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:flex">
+  <div class="login-box">
+    <div class="login-logo"><span class="ico">🌲</span><h1>Skovlyst CRM</h1><p>Production A/S · Log ind for at fortsætte</p></div>
+    <div class="login-tab"><button class="on" id="lt-in" onclick="loginTab('in')">Log ind</button><button id="lt-up" onclick="loginTab('up')">Opret konto</button></div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-ok" id="login-ok"></div>
+    <input class="login-fi" type="email" id="login-email" placeholder="Email" autocomplete="email">
+    <input class="login-fi" type="password" id="login-pw" placeholder="Adgangskode" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Log ind</button>
+    <div style="text-align:center;margin-top:14px"><button onclick="doForgot()" style="background:none;border:none;color:rgba(0,210,255,.35);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Glemt adgangskode?</button></div>
+  </div>
+</div>
+
+<div class="app" style="display:none">
 
 <!-- SIDEBAR -->
 <aside class="sb">
@@ -327,6 +363,7 @@ select.fi option { background: var(--white); }
   <div class="sfooter">
     <div class="ai-status"><span class="dot" id="ai-dot"></span><span id="ai-label">AI ikke sat op</span></div>
   </div>
+  <div class="sb-user"><span id="sb-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button onclick="doLogout()">Log ud</button></div>
 </aside>
 
 <!-- MAIN -->
@@ -746,33 +783,38 @@ const saleBaN = s => baNF(s.price,s.cost);
 const saleBaW = s => baWF(s.price,s.cost,saleFreight(s));
 
 // ════════════════════════════════
+//  SUPABASE
+// ════════════════════════════════
+const SB_URL = 'INDSÆT_DIN_SUPABASE_URL';
+const SB_KEY = 'INDSÆT_DIN_SUPABASE_ANON_KEY';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let sbUser = null;
+
+// ════════════════════════════════
 //  STORAGE
 // ════════════════════════════════
-function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){console.error('Save fejl:',e);setTimeout(()=>toast('⚠️ Gem fejlede — data gemmes ikke. Ryd browser-lager og prøv igen.'),0);}}
-function load(){
-  const r=localStorage.getItem(DB_KEY);
-  if(!r){initDB();return;}
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    if(!sbUser)return;
+    try{
+      const {error}=await sb.from('crm_data').upsert({user_id:sbUser.id,data:DB,updated_at:new Date().toISOString()});
+      if(error)throw error;
+    }catch(e){console.error('Save fejl:',e);toast('⚠️ Gem fejlede: '+e.message);}
+  }, 600);
+}
+async function load(){
+  if(!sbUser)return;
   try{
-    DB=JSON.parse(r);
-    ['customers','sales','products','pipeline','prospects','campaigns'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=[];});
-    if(!DB.pdfs||typeof DB.pdfs!=='object')DB.pdfs={};
-    // migrate pdfB64 from sale lines → DB.pdfs (one PDF per invoice)
-    const migMap={};let migrated=false;
-    DB.sales.forEach(s=>{
-      if(s.pdfB64){
-        const k=s.invoiceNum||s.id;
-        if(!migMap[k]){const pid=uid('pdf');DB.pdfs[pid]=s.pdfB64;migMap[k]=pid;}
-        s.pdfKey=migMap[k];delete s.pdfB64;migrated=true;
-      }
-    });
-    if(migrated)save();
-  }catch(e){
-    // parse failed — keep raw string as backup, don't wipe
-    console.error('Load fejl:',e);
-    localStorage.setItem(DB_KEY+'_backup', r);
-    initDB();
-    setTimeout(()=>toast('⚠️ Data kunne ikke indlæses — backup gemt. Kontakt support.'),500);
-  }
+    const {data,error}=await sb.from('crm_data').select('data').eq('user_id',sbUser.id).maybeSingle();
+    if(error)throw error;
+    if(data?.data){
+      DB=data.data;
+      ['customers','sales','products','pipeline','prospects','campaigns'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=[];});
+      if(!DB.pdfs||typeof DB.pdfs!=='object')DB.pdfs={};
+    }else{initDB();save();}
+  }catch(e){console.error('Load fejl:',e);initDB();}
 }
 function initDB(){
   DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[],pdfs:{}};
@@ -1133,13 +1175,51 @@ function exportCSV(){if(!DB.sales.length){toast('Ingen data at eksportere');retu
 function updateBadges(){const hot=DB.prospects.filter(p=>p.status==='Varm'||p.status==='Tilbud sendt').length;const actC=DB.campaigns.filter(c=>c.stops.some(s=>s.status==='pending')).length;[['nb-samp',actC],['nb-prosp',hot]].forEach(([id,n])=>{const nb=document.getElementById(id);if(!nb)return;const old=nb.querySelector('.bc');if(old)old.remove();if(n>0)nb.innerHTML+=`<span class="bc">${n}</span>`;});}
 
 // ════════════════════════════════
+//  AUTH UI
+// ════════════════════════════════
+let loginMode='in';
+function loginTab(m){loginMode=m;document.getElementById('lt-in').classList.toggle('on',m==='in');document.getElementById('lt-up').classList.toggle('on',m==='up');document.getElementById('login-btn').textContent=m==='in'?'Log ind':'Opret konto';document.getElementById('login-err').style.display='none';document.getElementById('login-ok').style.display='none';}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim(),pw=document.getElementById('login-pw').value;
+  const errEl=document.getElementById('login-err'),okEl=document.getElementById('login-ok');
+  errEl.style.display='none';okEl.style.display='none';
+  if(!email||!pw){errEl.textContent='Udfyld email og adgangskode';errEl.style.display='block';return;}
+  document.getElementById('login-btn').textContent='Vent...';
+  const {error}=loginMode==='in'
+    ?await sb.auth.signInWithPassword({email,password:pw})
+    :await sb.auth.signUp({email,password:pw});
+  if(error){errEl.textContent=error.message;errEl.style.display='block';document.getElementById('login-btn').textContent=loginMode==='in'?'Log ind':'Opret konto';}
+  else if(loginMode==='up'){okEl.textContent='✅ Konto oprettet! Tjek din email for bekræftelse, log derefter ind.';okEl.style.display='block';loginTab('in');}
+}
+async function doForgot(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){document.getElementById('login-err').textContent='Skriv din email først';document.getElementById('login-err').style.display='block';return;}
+  await sb.auth.resetPasswordForEmail(email);
+  document.getElementById('login-ok').textContent='✅ Reset-link sendt til '+email;document.getElementById('login-ok').style.display='block';
+}
+async function doLogout(){await sb.auth.signOut();}
+
+function appReady(){
+  document.getElementById('login-screen').style.display='none';
+  document.querySelector('.app').style.display='flex';
+  document.querySelector('.main').classList.add('main-dark');
+  document.getElementById('sb-email').textContent=sbUser.email;
+}
+function showLogin(){
+  document.getElementById('login-screen').style.display='flex';
+  document.querySelector('.app').style.display='none';
+}
+
+// ════════════════════════════════
 //  INIT
 // ════════════════════════════════
-load();
-document.querySelector('.main').classList.add('main-dark');
-if(!DB.products.find(p=>p.sku==='SK-001')){
-  const sk=[
-    {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(session){
+    sbUser=session.user;
+    await load();
+    if(!DB.products.find(p=>p.sku==='SK-001')){
+      const sk=[
+        {sku:'SK-001',name:'Ellebryg 0,5%',kolli:12,cost:3.63},
     {sku:'SK-002',name:'India Pale Ale 0,5%',kolli:15,cost:3.63},
     {sku:'SK-003',name:'Lager 0,5%',kolli:6,cost:3.63},
     {sku:'SK-004',name:'Nældebryg 0,5%',kolli:12,cost:3.63},
@@ -1154,12 +1234,18 @@ if(!DB.products.find(p=>p.sku==='SK-001')){
     {sku:'SK-013',name:'Ahornbryg Bock 5,5%',kolli:15,cost:4.63},
     {sku:'SK-014',name:'Bøgebryg Brown Ale 5,2%',kolli:15,cost:4.63},
   ];
-  sk.forEach(p=>DB.products.push({id:uid('p'),brand:'Skovlyst Øl',litre:0.5,list:0,pant:0,...p}));
-  save();
-}
-rDash();
-updateAiStatus();
-updateBadges();
+      sk.forEach(p=>DB.products.push({id:uid('p'),brand:'Skovlyst Øl',litre:0.5,list:0,pant:0,...p}));
+      save();
+    }
+    appReady();
+    rDash();
+    updateAiStatus();
+    updateBadges();
+  }else{
+    sbUser=null;
+    showLogin();
+  }
+});
 </script>
 </body>
 </html>
