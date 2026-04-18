@@ -777,7 +777,7 @@ function showAIResult(parsed){
   document.getElementById('inv-num').value=parsed.invoiceNumber||'';
   document.getElementById('inv-dt').value=parsed.invoiceDate||today();
   if(parsed.customerName){const nm=parsed.customerName.toLowerCase();const m=DB.customers.find(c=>nm.includes(c.name.toLowerCase().split(' ')[0])||c.name.toLowerCase().includes(nm.split(' ')[0]));if(m)document.getElementById('inv-cust').value=m.id;}
-  pendLines=(parsed.lines||[]).map((l,i)=>{const kq=l.kolliQty||parseKS(l.kolliStr)||1,oa=l.ordreAntal||1,ts=l.totalStk||(oa*kq);let up=l.unitPrice||0;if(!up&&l.lineTotal&&ts)up=r2(l.lineTotal/ts);return{i,rawName:l.rawName||'',mpId:matchProd(l.matchedProductName||l.rawName),ordreAntal:oa,kolliQty:kq,totalStk:ts,kolliStr:l.kolliStr||'',unitPrice:up};});
+  pendLines=(parsed.lines||[]).map((l,i)=>{const kq=l.kolliQty||parseKS(l.kolliStr)||1,oa=l.ordreAntal||1,ts=l.totalStk||(oa*kq);let up=l.unitPrice||0;const lt=l.lineTotal||0;if(!up&&lt&&ts)up=r4(lt/ts);return{i,rawName:l.rawName||'',mpId:matchProd(l.matchedProductName||l.rawName),ordreAntal:oa,kolliQty:kq,totalStk:ts,kolliStr:l.kolliStr||'',unitPrice:up,lineTotal:lt};});
   document.getElementById('ai-sum').textContent=`✅ Fandt ${pendLines.length} ordrelinje${pendLines.length!==1?'r':''} — gennemse og bekræft`;
   renderAIL();
   document.getElementById('inv-s1').style.display='none';
@@ -807,7 +807,7 @@ function confirmImport(){
   if(!cId){toast('❌ Vælg en kunde');return;}
   const valid=pendLines.filter(l=>l.mpId&&l.totalStk>0&&l.unitPrice>0);
   if(!valid.length){toast('❌ Mindst én linje med produkt, antal og pris');return;}
-  valid.forEach(l=>{const p=DB.products.find(x=>x.id===l.mpId);DB.sales.push({id:uid('s'),customerId:cId,productId:l.mpId,qty:l.totalStk,ordreAntal:l.ordreAntal,kolliQty:l.kolliQty,kolliStr:l.kolliStr,unitPrice:l.unitPrice,price:r2(l.unitPrice*l.totalStk),cost:p?r2(p.cost*l.totalStk):0,date:invDt,invoiceNum:invNum,pdfB64:pendB64,pdfName:pendName});});
+  valid.forEach(l=>{const p=DB.products.find(x=>x.id===l.mpId);DB.sales.push({id:uid('s'),customerId:cId,productId:l.mpId,qty:l.totalStk,ordreAntal:l.ordreAntal,kolliQty:l.kolliQty,kolliStr:l.kolliStr,unitPrice:l.unitPrice,price:l.lineTotal>0?r2(l.lineTotal):r2(l.unitPrice*l.totalStk),cost:p?r2(p.cost*l.totalStk):0,date:invDt,invoiceNum:invNum,pdfB64:pendB64,pdfName:pendName});});
   save();closeM('m-inv');
   const ap=document.querySelector('.nb.on')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]||'dash';
   ({dash:rDash,custs:rCusts,sales:rSales,ws:rWS,fc:rForecast})[ap]?.();
