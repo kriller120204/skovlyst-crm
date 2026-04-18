@@ -762,7 +762,8 @@ async function runAI(){
     let data;try{data=JSON.parse(rawText);}catch(pe){ld.classList.remove('show');err.textContent='❌ API svarede ikke JSON (status '+resp.status+'): '+rawText.slice(0,120);err.classList.add('show');return;}
     if(!resp.ok){if(resp.status===401){ld.classList.remove('show');err.textContent='❌ API-nøgle ugyldig — tjek Vercel Environment Variables';err.classList.add('show');return;}throw new Error(data.error?.message||'Status '+resp.status);}
     const txt=data.content?.map(b=>b.text||'').join('').trim();
-    const parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    const jsonMatch=txt.match(/\{[\s\S]*\}/);
+    const parsed=JSON.parse(jsonMatch?jsonMatch[0]:txt.replace(/```json|```/g,'').trim());
     ld.classList.remove('show');showAIResult(parsed);
   }catch(e){ld.classList.remove('show');err.textContent='❌ '+e.message;err.classList.add('show');}
 }
