@@ -750,24 +750,29 @@ const saleBaW = s => baWF(s.price,s.cost,saleFreight(s));
 // ════════════════════════════════
 function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){console.error('Save fejl:',e);setTimeout(()=>toast('⚠️ Gem fejlede — data gemmes ikke. Ryd browser-lager og prøv igen.'),0);}}
 function load(){
+  const r=localStorage.getItem(DB_KEY);
+  if(!r){initDB();return;}
   try{
-    const r=localStorage.getItem(DB_KEY);
-    if(r){
-      DB=JSON.parse(r);
-      ['pipeline','prospects','campaigns'].forEach(k=>{if(!DB[k])DB[k]=[];});
-      if(!DB.pdfs)DB.pdfs={};
-      // migrate: move pdfB64 from individual sale lines into DB.pdfs (each PDF was duplicated per line)
-      const migMap={};let migrated=false;
-      DB.sales.forEach(s=>{
-        if(s.pdfB64){
-          const k=s.invoiceNum||s.id;
-          if(!migMap[k]){const pid=uid('pdf');DB.pdfs[pid]=s.pdfB64;migMap[k]=pid;}
-          s.pdfKey=migMap[k];delete s.pdfB64;migrated=true;
-        }
-      });
-      if(migrated)save();
-    }else initDB();
-  }catch(e){initDB();}
+    DB=JSON.parse(r);
+    ['customers','sales','products','pipeline','prospects','campaigns'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=[];});
+    if(!DB.pdfs||typeof DB.pdfs!=='object')DB.pdfs={};
+    // migrate pdfB64 from sale lines → DB.pdfs (one PDF per invoice)
+    const migMap={};let migrated=false;
+    DB.sales.forEach(s=>{
+      if(s.pdfB64){
+        const k=s.invoiceNum||s.id;
+        if(!migMap[k]){const pid=uid('pdf');DB.pdfs[pid]=s.pdfB64;migMap[k]=pid;}
+        s.pdfKey=migMap[k];delete s.pdfB64;migrated=true;
+      }
+    });
+    if(migrated)save();
+  }catch(e){
+    // parse failed — keep raw string as backup, don't wipe
+    console.error('Load fejl:',e);
+    localStorage.setItem(DB_KEY+'_backup', r);
+    initDB();
+    setTimeout(()=>toast('⚠️ Data kunne ikke indlæses — backup gemt. Kontakt support.'),500);
+  }
 }
 function initDB(){
   DB={customers:[],sales:[],products:[],pipeline:[],prospects:[],campaigns:[],pdfs:{}};
