@@ -971,7 +971,7 @@ async function runAI(){
   err.classList.remove('show');ld.classList.add('show');
   document.getElementById('ai-txt').textContent='AI analyserer faktura...';
   const pl=DB.products.length?DB.products.map(p=>`"${p.name}"[${p.kolli||1}/kolli]`).join(', '):'(ingen)';
-  const prompt=`Udtræk varelinjer som JSON. Ignorer pant/retur/deposit-linjer. Katalog: ${pl}\nREGLER:\n1. kolliQty: læs fra produktnavn (24x33CL→24, 12x50CL→12, 6x75CL→6). Default 1.\n2. totalStk = ordreAntal × kolliQty\n3. lineTotal = linjebeløb ekskl. moms EFTER rabat\n4. unitPrice = lineTotal / totalStk  ← VIGTIGT: per STYK ikke per kolli\nEksempel: ordreAntal=2, kolliQty=12, lineTotal=257.28 → totalStk=24, unitPrice=257.28/24=10.72\nKun JSON:\n{"invoiceNumber":"","invoiceDate":"YYYY-MM-DD","customerName":"","lines":[{"rawName":"","matchedProductName":"","ordreAntal":1,"kolliStr":"","kolliQty":1,"totalStk":1,"unitPrice":0,"lineTotal":0}]}`;
+  const prompt=`Udtræk varelinjer som JSON. Ignorer pant/retur/deposit-linjer. Katalog: ${pl}\nREGLER:\n1. kolliQty: læs fra produktnavn. Format "NxSIZEenhed"→N (24x33CL→24, 12x50CL→12). Format "(NxM)" uden enhed→N×M ((1x12)→12, (2x12)→24). Default 1.\n2. totalStk = ordreAntal × kolliQty\n3. lineTotal = linjebeløb ekskl. moms EFTER rabat\n4. unitPrice = lineTotal / totalStk  ← VIGTIGT: per STYK ikke per kolli\nEksempel A: ordreAntal=2, kolliQty=12, lineTotal=257.28 → totalStk=24, unitPrice=10.72\nEksempel B: produkt "(1x12)", ordreAntal=12 CTN, lineTotal=691.20 → kolliQty=12, totalStk=144, unitPrice=4.80\nKun JSON:\n{"invoiceNumber":"","invoiceDate":"YYYY-MM-DD","customerName":"","lines":[{"rawName":"","matchedProductName":"","ordreAntal":1,"kolliStr":"","kolliQty":1,"totalStk":1,"unitPrice":0,"lineTotal":0}]}`;
   try{
     const body={text:(pendText||'').slice(0,4000),prompt};
     const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -991,7 +991,16 @@ async function runAI(){
   }catch(e){ld.classList.remove('show');err.textContent='❌ '+e.message;err.classList.add('show');}
 }
 
-function parseKS(s){if(!s)return 1;const m=s.toString().replace(',','.').match(/(\d+)\s*[x×*]/i);return m?parseInt(m[1]):1;}
+function parseKS(s){
+  if(!s)return 1;
+  const str=s.toString().replace(',','.');
+  // "(NxM)" uden enhed efter M → N×M stk/kolli, f.eks. (1x12)→12, (2x12)→24
+  const m2=str.match(/(\d+)\s*[x×*]\s*(\d+)(?!\s*[a-zA-Z])/i);
+  if(m2)return parseInt(m2[1])*parseInt(m2[2]);
+  // "NxSIZEenhed" → N stk/kolli, f.eks. 24x33CL→24
+  const m1=str.match(/(\d+)\s*[x×*]/i);
+  return m1?parseInt(m1[1]):1;
+}
 function matchProd(name){if(!name||!DB.products.length)return DB.products[0]?.id||'';const n=name.toLowerCase();let best='',bs=0;DB.products.forEach(p=>{const pn=p.name.toLowerCase();if(pn===n){best=p.id;bs=999;return;}let sc=0;n.split(/\s+/).forEach(w=>{if(w.length>2&&pn.includes(w))sc+=w.length*2;});pn.split(/\s+/).forEach(w=>{if(w.length>2&&n.includes(w))sc+=w.length;});if(sc>bs){best=p.id;bs=sc;}});return bs>=3?best:(DB.products[0]?.id||'');}
 
 function showAIResult(parsed){
