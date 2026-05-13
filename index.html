@@ -329,6 +329,8 @@ select.fi option { background: var(--white); }
     <input class="login-fi" type="password" id="login-pw" placeholder="Adgangskode" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" id="login-btn" onclick="doLogin()">Log ind</button>
     <div style="text-align:center;margin-top:14px"><button onclick="doForgot()" style="background:none;border:none;color:rgba(0,210,255,.35);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Glemt adgangskode?</button></div>
+    <button class="login-btn" id="offline-btn" onclick="startOfflineMode()" style="margin-top:10px;background:#0f172a;border-color:#0f172a;color:#fff">Brug app offline</button>
+    <div id="offline-note" style="font-size:12px;color:rgba(255,255,255,.65);margin-top:10px;display:none">Offline mode er aktiv. Data gemmes kun i denne browser.</div>
   </div>
 </div>
 
@@ -790,6 +792,48 @@ const SB_URL = 'https://wtuinqazlyjcjzhbrohh.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dWlucWF6bHlqY2p6aGJyb2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjQ1NzcsImV4cCI6MjA5MjEwMDU3N30.mj_0fXsO2_WEyJCoUGAXIyUG2ttenGeJav9KHu67dws';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 let sbUser = null;
+let localMode = false;
+const LOCAL_DB_KEY = 'skovlyst_crm_localdb';
+const LOCAL_AUTH_USER = {email:'Lokal offline',id:'local'};
+
+function loadLocalData(){
+  const raw = localStorage.getItem(LOCAL_DB_KEY);
+  if(raw){
+    try{DB = JSON.parse(raw);}catch(e){DB = null;}
+  }
+  if(!DB || !Array.isArray(DB.customers)){
+    initDB();
+    saveLocalData();
+    return;
+  }
+  ['customers','sales','products','pipeline','prospects','campaigns'].forEach(k=>{if(!Array.isArray(DB[k]))DB[k]=[];});
+  if(!DB.pdfs||typeof DB.pdfs!=='object')DB.pdfs={};
+  if(!DB.settings)DB.settings={};
+  freightRate=DB.settings.freightRate??2.10;
+}
+function saveLocalData(){
+  try{
+    localStorage.setItem(LOCAL_DB_KEY,JSON.stringify(DB));
+    setSaveStatus('✓ Gemt lokalt');
+    setTimeout(()=>setSaveStatus(''),2500);
+  }catch(e){
+    console.error('Local save fejl:',e);
+    setSaveStatus('⚠️ Lokal gem fejlede');
+    toast('⚠️ Lokal gem fejlede: '+e.message);
+  }
+}
+function startOfflineMode(){
+  localMode=true;
+  sbUser=LOCAL_AUTH_USER;
+  loadLocalData();
+  initAppData();
+  appReady();
+  const okEl=document.getElementById('login-ok');
+  okEl.textContent='✅ Offline mode aktiveret. Data gemmes kun i denne browser.';
+  okEl.style.display='block';
+  const note=document.getElementById('offline-note');
+  if(note)note.style.display='block';
+}
 
 // ════════════════════════════════
 //  STORAGE
@@ -800,6 +844,10 @@ function save(){
   setSaveStatus('Gemmer...');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
+    if(localMode){
+      saveLocalData();
+      return;
+    }
     if(!sbUser){setSaveStatus('');return;}
     try{
       const {error}=await sb.from('crm_data').upsert({user_id:sbUser.id,data:DB,updated_at:new Date().toISOString()});
@@ -811,12 +859,20 @@ function save(){
 }
 async function flushSave(){
   clearTimeout(saveTimer);
+  if(localMode){
+    saveLocalData();
+    return;
+  }
   if(!sbUser)return;
   try{await sb.from('crm_data').upsert({user_id:sbUser.id,data:DB,updated_at:new Date().toISOString()});}catch(e){}
 }
 window.addEventListener('beforeunload',()=>flushSave());
 
 async function load(){
+  if(localMode){
+    loadLocalData();
+    return;
+  }
   if(!sbUser)return;
   try{
     const {data,error}=await sb.from('crm_data').select('data').eq('user_id',sbUser.id).maybeSingle();
@@ -925,7 +981,11 @@ async function runAI(){
     const txt=data.content?.map(b=>b.text||'').join('').trim();
     const jsonMatch=txt.match(/\{[\s\S]*\}/);
     const raw=(jsonMatch?jsonMatch[0]:txt).replace(/```json|```/g,'').trim();
-    const cleaned=raw.replace(/:\s*(-?\d+\.?\d*)\s*\/\s*(-?\d+\.?\d*)/g,(_,a,b)=>':'+r2(parseFloat(a)/parseFloat(b))).replace(/,\s*([}\]])/g,'$1').replace(/([{,]\s*)(\w+)\s*:/g,'$1"$2":');
+    const cleaned=raw
+      .replace(/:\s*(-?\d+\.?\d*)\s*\/\s*(-?\d+\.?\d*)/g,(_,a,b)=>':'+r2(parseFloat(a)/parseFloat(b)))
+      .replace(/:\s*(-?\d+),(\d{2})(?=[,}\]\s])/g,(_,a,b)=>':'+a+'.'+b)
+      .replace(/,\s*([}\]])/g,'$1')
+      .replace(/([{,]\s*)(\w+)\s*:/g,'$1"$2":');
     let parsed;try{parsed=JSON.parse(cleaned);}catch(e2){parsed=JSON.parse(raw);};
     ld.classList.remove('show');showAIResult(parsed);
   }catch(e){ld.classList.remove('show');err.textContent='❌ '+e.message;err.classList.add('show');}
@@ -1198,6 +1258,16 @@ async function doLogin(){
   const errEl=document.getElementById('login-err'),okEl=document.getElementById('login-ok');
   errEl.style.display='none';okEl.style.display='none';
   if(!email||!pw){errEl.textContent='Udfyld email og adgangskode';errEl.style.display='block';return;}
+  if(window.location.protocol==='file:'){
+    errEl.textContent='Åbn appen via en webserver (http://localhost eller Vercel), ikke via fil://. Login kræver netværkstilgang til Supabase.';
+    errEl.style.display='block';
+    return;
+  }
+  if(!navigator.onLine){
+    errEl.textContent='Du er offline. Tjek internetforbindelse og prøv igen.';
+    errEl.style.display='block';
+    return;
+  }
   document.getElementById('login-btn').textContent='Vent...';
   try{
     if(loginMode==='up'){
@@ -1213,7 +1283,13 @@ async function doLogin(){
       appReady();
     }
   }catch(e){
-    errEl.textContent=e.message;errEl.style.display='block';
+    console.error('Login error:', e);
+    if(e?.message==='Failed to fetch' || e?.name==='TypeError'){
+      errEl.textContent='Kunne ikke nå Supabase login-serveren. Tjek Vercel-udgivelsen og netværksforbindelsen. Brug offline mode, hvis problemet fortsætter.';
+    } else {
+      errEl.textContent=e.message;
+    }
+    errEl.style.display='block';
   }
   document.getElementById('login-btn').textContent=loginMode==='in'?'Log ind':'Opret konto';
 }
@@ -1223,7 +1299,15 @@ async function doForgot(){
   await sb.auth.resetPasswordForEmail(email);
   document.getElementById('login-ok').textContent='✅ Reset-link sendt til '+email;document.getElementById('login-ok').style.display='block';
 }
-async function doLogout(){await sb.auth.signOut();}
+async function doLogout(){
+  if(localMode){
+    localMode=false;
+    sbUser=null;
+    showLogin();
+    return;
+  }
+  await sb.auth.signOut();
+}
 
 function appReady(){
   document.getElementById('login-screen').style.display='none';
@@ -1234,6 +1318,8 @@ function appReady(){
 function showLogin(){
   document.getElementById('login-screen').style.display='flex';
   document.querySelector('.app').style.display='none';
+  const note=document.getElementById('offline-note');
+  if(note)note.style.display='none';
 }
 
 // ════════════════════════════════
